@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{{ title }}
+
+{% block head %}
+{% end %}
+
+{% block body %}
+<script type="text/javascript">
+  function NotClickMe(){
+    alert("叫你不要点我了");
+    alert("叫你不听话");
+    alert("不听话就会被勇总扣你工资了");
+    alert("这下听话了吧");
+  }
+  function ViewTask(){
+    
+  };
+</script>
+
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+              <li class="nav-header">Palnet</li>
+              <li class="active"><a href="#" onclick="NotClickMe()"> 不要点我 </a></li>
+              <li><a href="#" onclick="ViewTask">View Task</a></li>
+              <li><a href="#">Add Task</a></li>
+              <li class="nav-header">Sidebar</li>
+              {{ AdminDelTask }}
+            </ul>
+          </div><!--/.well -->
+        </div><!--/span-->
+        <div class="span9">
+          <div class="hero-unit">
+            <p>李哥什么的最厉害了.</p>
+            <p>废话 难道我师兄不叼么.</p>
+            <p>林太琪才是唯一的真神好不好.</p>
+            <p><a href="#" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+          </div>
+          <div class="row-fluid">
+            <div class="span4">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p>
+            </div><!--/span-->
+          </div><!--/row-->
+        </div><!--/span-->
+      </div><!--/row-->
+      <hr>
+      View Task -.-
+      {% include "DatePicker.html" %}
+      <hr>
+
+      <footer>
+        <p>&copy; Company 2013</p>
+      </footer>
+
+    </div><!--/.fluid-container-->
+    {% end %}  

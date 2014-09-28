@@ -1,0 +1,41 @@
+
+<div id="datetimepicker" class="input-append date">
+  <input type="text" name="FromTimer" id="time"></input>
+
+  <span class="add-on">
+    <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+  </span>
+  </div>
+<div id="datetimepicker2" class="input-append date">
+  <input type="text" name="ToTimer" id="time"></input>
+  <span class="add-on">
+    <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+  </span>
+
+</div>
+<script type="text/javascript"  src="../static/js/jquery.min.js"></script> 
+<script type="text/javascript"  src="../static/js/bootstrap.min.js"></script>
+<script type="text/javascript"  src="../static/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript">
+  $('#datetimepicker').datetimepicker({
+    format: 'MM/dd/yyyy hh:mm',
+    language: 'en',
+    pickDate: true,
+    pickTime: true,
+    hourStep: 1,
+    minuteStep: 15,
+    secondStep: 30,
+    inputMask: true
+  });
+  $('#datetimepicker2').datetimepicker({
+    format: 'MM/dd/yyyy hh:mm',
+    language: 'en',
+    pickDate: true,
+    pickTime: true,
+    hourStep: 1,
+    minuteStep: 15,
+    secondStep: 30,
+    inputMask: true
+  });
+
+</script>
