@@ -15,5 +15,4 @@ base on tornado & sqlalchemy
 
 Contributer
 ====
-g0t3n 
-涛神 
+g0t3n & 涛神 
