@@ -7,14 +7,18 @@
 
 {% block body %}
 <script type="text/javascript">
-  function NotClickMe(){
+  function NotClickMeFun(){
     alert("叫你不要点我了");
     alert("叫你不听话");
     alert("不听话就会被勇总扣你工资了");
     alert("这下听话了吧");
   }
-  function ViewTask(){
-    
+  {% comment 谢谢涛神教我的 jQuery 查询元素 %}
+  function ViewTaskFun(){
+    $('#ContentFrame')[0].src="/ViewContentUnit/?action=ViewTask";
+  };
+  function AddTaskFun(){
+    $('#ContentFrame')[0].src="/ViewContentUnit/?action=AddTask";
   };
 </script>
 
@@ -24,37 +28,34 @@
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
               <li class="nav-header">Palnet</li>
-              <li class="active"><a href="#" onclick="NotClickMe()"> 不要点我 </a></li>
-              <li><a href="#" onclick="ViewTask">View Task</a></li>
-              <li><a href="#">Add Task</a></li>
+              <li class="active"><a href="#" onclick="NotClickMeFun()"> 不要点我 </a></li>
+              <li><a href="#" onclick="ViewTaskFun()">[ View Task ]</a></li>
+              <li><a href="#" onclick="AddTaskFun()">[ Add Task ]</a></li>
               <li class="nav-header">Sidebar</li>
               {{ AdminDelTask }}
             </ul>
           </div><!--/.well -->
         </div><!--/span-->
         <div class="span9">
-          <div class="hero-unit">
-            <p>李哥什么的最厉害了.</p>
-            <p>废话 难道我师兄不叼么.</p>
-            <p>林太琪才是唯一的真神好不好.</p>
-            <p><a href="#" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
-          </div>
+{% comment iframe 实现局部刷新 %}
+{% comment frameborder 控制无边框,onload 实现自适应高度 %}
+<iframe name="ViewContentUnit" id="ContentFrame" src="/ViewContentUnit/" width=100%
+  frameborder="0" onload="this.height=ViewContentUnit.document.body.scrollHeight"></iframe>
+ {%  comment 
           <div class="row-fluid">
             <div class="span4">
               <h2>Heading</h2>
-              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p>Donec id elit non . </p>
               <p><a class="btn" href="#">View details &raquo;</a></p>
             </div><!--/span-->
           </div><!--/row-->
+          %}
         </div><!--/span-->
       </div><!--/row-->
       <hr>
-      View Task -.-
-      {% include "DatePicker.html" %}
-      <hr>
 
       <footer>
-        <p>&copy; Company 2013</p>
+        <p>&copy; R1p Th4t Sh1t~~</p>
       </footer>
 
     </div><!--/.fluid-container-->

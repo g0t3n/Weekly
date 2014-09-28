@@ -9,8 +9,6 @@ from json import dumps as jsondumps
 import tornado.ioloop
 import tornado.web
 
-
-
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self.get_secure_cookie("user")
@@ -41,13 +39,25 @@ class LoginHandler(BaseHandler):
 class MainHandler(tornado.web.RequestHandler):
     #@tornado.web.authenticated
     def get(self):
-        self.render('index.html', title= 'Weekly ~~', AdminDelTask="123")
+        self.render('index.html', title= 'Weekly ~~', AdminDelTask="AdminLogin")
     def post(self):
         pass
 
 class AddTask(tornado.web.RequestHandler):
     def post(self):
         self.write("lalalal")
+
+class ViewContentUnit(tornado.web.RequestHandler):
+    def get(self):
+        action = self.get_argument("action", False)
+        if not action:
+            self.render('ContentUnit/default.html', display_unit = 'default')
+        elif action == 'ViewTask':
+            self.render('ContentUnit/ViewTask.html', display_uint = 'ViewTask')
+        elif action == 'AddTask':
+            self.render('ContentUnit/AddTask.html', display_uint = 'AddTask')
+
+
 
 settings = {
         "cookie_secret": "61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
@@ -62,6 +72,7 @@ application = tornado.web.Application([
      # (r"/login", LoginHandler),
     (r"/index*", MainHandler),
     (r"/AddTask/*", AddTask),
+    (r"/ViewContentUnit/*", ViewContentUnit),
     (r".*", BaseHandler),
     ], **settings)
 
