@@ -15,6 +15,7 @@
   }
   {% comment 谢谢涛神教我的 jQuery 查询元素 %}
   function ViewTaskFun(){
+    $('#ViewTaskLi')[0].class="active";   <!-- fixme ... -->
     $('#ContentFrame')[0].src="/ViewContentUnit/?action=ViewTask";
   };
   function AddTaskFun(){
@@ -29,8 +30,8 @@
             <ul class="nav nav-list">
               <li class="nav-header">Palnet</li>
               <li class="active"><a href="#" onclick="NotClickMeFun()"> 不要点我 </a></li>
-              <li><a href="#" onclick="ViewTaskFun()">[ View Task ]</a></li>
-              <li><a href="#" onclick="AddTaskFun()">[ Add Task ]</a></li>
+              <li id="ViewTaskLi"><a href="#" onclick="ViewTaskFun()">[ View Task ]</a></li>
+              <li id="AddTaskLi"><a href="#" onclick="AddTaskFun()">[ Add Task ]</a></li>
               <li class="nav-header">Sidebar</li>
               {{ AdminDelTask }}
             </ul>

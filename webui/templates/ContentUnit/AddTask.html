@@ -1,9 +1,37 @@
 {% extends base.html %}
 
 {% block body %}
+<script type="text/javascript">
+  function submitTask(){
+    alert($('#taskArea').val());
+    var $postdata = ""
+    $postdata = "taskcontent=" + $('#taskArea').val();
+    $.ajax({
+      type : "POST",
+      url : "/AddTask/",
+      data : $postdata,
+      success : function(){
+                alert("Post Task success");
+      },
+      error : function($whatthefuck){
+                alert($whatthefuck)
+      }
+    })
+  }
+</script>
+
+
 <div class="hero-unit">
-  {% include "DatePicker.html" %}
-
+  {% comment include "DatePicker.html" %}
+  <div class="modal-header">
+    <p>你在干嘛在干嘛～～</p>
+  </div>
+  <hr>
+  <div class="modal-body">
+    <textarea id="taskArea" class="form-control" rows="3" style="margin: 0px 0px 10px; width: 710px; height: 200px;">{% block taskContent %}{% end %}</textarea>
+  </div>
+  <div class="modal-fotter">
+    <button id="submitTaskButton" onclick="submitTask()" class="btn btn-primary" data-loading-text="Loading...">保存更改</button>
+  </div>
 </div>
-
 {% end %}
