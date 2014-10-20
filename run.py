@@ -2,7 +2,7 @@
 
 import logging
 import logging.config
-logging.config.fileConfig("logging.conf")
+#logging.config.fileConfig("logging.conf")
 
 from webui import webui
 from database.sqlite.sqlite import *

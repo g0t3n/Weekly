@@ -7,31 +7,30 @@
 
 {% block body %}
 <script type="text/javascript">
-  function NotClickMeFun(){
-    alert("叫你不要点我了");
-    alert("叫你不听话");
-    alert("不听话就会被勇总扣你工资了");
-    alert("这下听话了吧");
+$(function(){
+$("#menuUl > li").click(function(){
+    toggleActive(this);
+  $('#ContentFrame')[0].src="/ViewContentUnit/?action="+this.id;
+}
+);
+})
+  {% comment Active li or Deactive li %}
+  function toggleActive(activeLi)
+  {
+    $("#menuUl > li").removeClass("active");
+    $(activeLi).addClass("active");
   }
-  {% comment 谢谢涛神教我的 jQuery 查询元素 %}
-  function ViewTaskFun(){
-    $('#ViewTaskLi')[0].class="active";   <!-- fixme ... -->
-    $('#ContentFrame')[0].src="/ViewContentUnit/?action=ViewTask";
-  };
-  function AddTaskFun(){
-    $('#ContentFrame')[0].src="/ViewContentUnit/?action=AddTask";
-  };
 </script>
 
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span3">
           <div class="well sidebar-nav">
-            <ul class="nav nav-list">
+            <ul id="menuUl" class="nav nav-list">
               <li class="nav-header">Palnet</li>
-              <li class="active"><a href="#" onclick="NotClickMeFun()"> 不要点我 </a></li>
-              <li id="ViewTaskLi"><a href="#" onclick="ViewTaskFun()">[ View Task ]</a></li>
-              <li id="AddTaskLi"><a href="#" onclick="AddTaskFun()">[ Add Task ]</a></li>
+              <li id="ViewTask"><a href="#">[ View Task ]</a></li>
+              <li id="AddTask"><a href="#">[ Add Task ]</a></li>
+              <li id="UserManage"><a href="#">[ User Manage ]</a></li>
               <li class="nav-header">Sidebar</li>
               {{ AdminDelTask }}
             </ul>
