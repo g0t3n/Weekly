@@ -24,15 +24,26 @@ class WeeklySqliteDB(WeeklyDB):
         # self.BaseDb.metadata.bind = engine
         # DBSession = sessionmaker(bind=engine)
         self.session = self.init_databases(db_path)
+
     def InsertUser(self, uid, username, password, last_login, email):
         tmpUser = UsersTable(uid, username, password, last_login,email)
         self.__Insert__(tmpUser)
         raise NotImplementedError
-    def QueryUser(self, withFilter=None):
-        self.__Query__(UsersTable, withFilter)
-        raise NotImplementedError
+    def QueryAllUserList(self, withFilter=None):
+        query_result = self.__Query__(UsersTable)
+        result_list=[]
+        for item in query_result:
+            result_list.append({
+                'User_ID' : item.User_ID,
+                'User_Name' : item.User_Name,
+                'User_Email' : item.User_Email,
+                'User_Level' : item.User_Level,
+                'User_Lastlogin' : item.User_Lastlogin,
+                })
+        return result_list
     def DelUser(self, tmpUser):
         raise NotImplementedError
+
 
     def InsertTask(self, task_owner,  task_text, task_id=None):
         update_time = get_time_as_string()

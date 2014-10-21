@@ -17,11 +17,12 @@ BaseDb = declarative_base()
 
 class UsersTable(BaseDb):
     __tablename__ = 'Users'
-    uid = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String(450), unique=True, nullable=False)
-    password = Column(String(450), nullable=False)
-    last_login = Column(Integer,)
-    email = Column(String(450), unique=True)
+    User_ID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    User_Name = Column(String(450), unique=True, nullable=False)
+    User_Pwd = Column(String(450), nullable=False)
+    User_Lastlogin = Column(Integer,)
+    User_Email = Column(String(450), unique=True)
+    User_Level = Column(String(450))
 
 
 class TasksTable(BaseDb):

@@ -1,0 +1,73 @@
+{% extends ../ContentUnit/base.html %}
+
+{% block body %}
+<script src="../static/colorBox/jquery.colorbox-min.js"></script>
+<link href="../static/colorBox/colorbox.css" rel="stylesheet">
+    <script src="../static/js/bootstrap-dropdown.js"></script>
+<script type="text/javascript">
+$(function(){
+   getUserList();
+   $("#addUserList").colorbox({iframe:true, width:"600px", height:"400px",rel:'group1'});
+})
+function getUserHtml(rowJson){
+        var trHtml="<tr>";
+        trHtml+="<td>"+rowJson["User_Name"]+"</td>";
+        trHtml+="<td>"+rowJson["User_Email"]+"</td>";
+        trHtml+="<td>"+rowJson["User_Level"]+"</td>";
+        trHtml+="<td><a class='btn btn-info' onclick='getPowerTree("+rowJson["User_ID"]+")'>PowerList</a></td>";
+        trHtml+="<td>"+rowJson["User_LastLogin"]+"</td>";
+        trHtml+="<td>"
+               +"<div class='btn-group'>"
+               +"<a class='btn btn-primary' onclick='editUser("+rowJson["User_ID"]+")' href='#'><i class='icon-user icon-white'></i> EditUser</a>"
+               +"<a class='btn btn-primary dropdown-toggle' data-toggle='dropdown' href='#'><span class='caret'></span></a>"
+               +"<ul class='dropdown-menu' role='menu'>"
+               +"<li><a href='#' onclick='editUser("+rowJson["User_ID"]+")><i class='icon-pencil'></i>Edit</a></li>"
+               +"<li><a href='#' onclick='resetPwd("+rowJson["User_ID"]+")><i class='icon-ban-circle'></i> ResetPwd</a></li>"
+               +"<li class='divider'></li>"
+               +"<li><a href='#' onclick='deleteUser("+rowJson["User_ID"]+")><i class='icon-trash'></i> Delete</a></li>"
+               +"</ul>"
+               +"</div>"
+               +"</td>";
+        trHtml+="</tr>";
+        return trHtml;
+    }
+  function getUserList()
+  {
+      $.ajax({
+      type:"GET",
+      url:"/UserHandler/?action=GetAllUserList",
+      success:function(data){
+          data=$.parseJSON(data);
+          for(row in data)
+          {
+               rowHtml = getUserHtml(data[row]);
+               $("#userList > tbody").append(rowHtml);
+          }
+      }
+      })
+  }
+
+</script>
+ <div>
+<form>
+  <fieldset>
+    <legend>用户列表</legend>
+      <div><a class="btn btn-primary" id="addUserList" href="/ViewContentUnit/?action=AddUser">AddUser</a></div>
+    <table id="userList" class="table">
+        <thead>
+        <td>UserName</td>
+        <td>Mail</td>
+        <td>Level</td>
+        <td>Power</td>
+        <td>LastLogin</td>
+        <td>Edit</td>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+
+  </fieldset>
+</form>
+ </div>
+{% end %}

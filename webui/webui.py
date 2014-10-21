@@ -68,7 +68,7 @@ class AddTask(tornado.web.RequestHandler):
             self.write("'success':'done'")
         else:
             self.write("'error' : 'some thing happend.. WTF'")
-
+''' old function
 class ControlUnit(tornado.web.RequestHandler):
     def get(self):
         action = self.get_argument("action", None)
@@ -89,6 +89,61 @@ class ControlUnit(tornado.web.RequestHandler):
         elif action == 'AddTask':
             self.render('ContentUnit/AddTask.html', display_uint = 'AddTask', 
                     taskContent="default")
+'''
+class UserHandler(tornado.web.RequestHandler):
+    def get(self):
+        def GetAllUserList():
+            user_list= webui_config['WeeklyDb'].QueryAllUserList()
+            result = "["
+            #import pdb;pdb.set_trace();
+            for i in user_list:
+                result += jsondumps(i, indent=4)+","
+            result = result[:-1] + "]"
+            self.write(result)
+        def GetUserInfo():
+            return ""
+        action = self.get_argument("action", None)
+        todo = {
+            "GetAllUserList":GetAllUserList,
+            "GetUserInfo":GetUserInfo
+            }
+        todo.get(action)()
+    def post(self):
+        return ""
+class ControlUnit(tornado.web.RequestHandler):
+    def get(self):
+        def ViewTask():
+            fromDate = self.get_argument("fromDate", None)
+            task_owner = self.get_argument("taskOwn", 53)
+            if not fromDate:
+                fromDate = get_time_as_string()
+            display_content = webui_config['WeeklyDb'].QueryTaskWithEQFilter(update_time=fromDate,
+                    task_owner=task_owner)
+            result = ""
+            for i in display_content:
+                result += jsondumps(i, indent=4) +"\n"
+            self.render('ContentUnit/ViewTask.html', display_uint = 'ViewTask',
+                   TaskContent=result )
+        def AddTask():
+            self.render('ContentUnit/AddTask.html', display_uint = 'AddTask',
+                    taskContent="default")
+        def UserManage():
+            self.render('UserManage/UserManage.html', display_uint = 'UserManage',
+                    taskContent="default")
+        def AddUser():
+            self.render('UserManage/AddUser.html', display_uint = 'AddUser',
+                    taskContent="default")
+        action = self.get_argument("action", None)
+        todo = {
+            "UserManage":UserManage,
+            "AddTask":AddTask,
+            "ViewTask":ViewTask,
+            "AddUser":AddUser
+            }
+        if not action:
+            self.render('ContentUnit/default.html', display_unit = 'default')
+        else:
+            todo.get(action)()
 
 settings = {
         "cookie_secret": "61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
@@ -104,6 +159,7 @@ application = tornado.web.Application([
     (r"/index*", MainHandler),
     (r"/AddTask/*", AddTask),
     (r"/ViewContentUnit/*", ControlUnit),
+    (r"/UserHandler/*", UserHandler),
     (r".*", BaseHandler),
     ], **settings)
 
