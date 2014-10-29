@@ -9,6 +9,33 @@ $(function(){
    getUserList();
    $("#addUserList").colorbox({iframe:true, width:"600px", height:"400px",rel:'group1'});
 })
+function editUser(id)
+{
+ $.colorbox({iframe:true, width:"600px", height:"400px",href:'/ViewContentUnit/?action=AddUser&UserID='+id});
+}
+function delUser(id)
+{
+ $.ajax({
+      type:"GET",
+      url:"/UserHandler/?action=DelUser&UserID="+id,
+      success:function(data){
+          data=$.parseJSON(data);
+          alert(data.msg);
+          getUserList();
+      }
+      })
+}
+function resetPwd(id)
+{
+     $.ajax({
+      type:"GET",
+      url:"/UserHandler/?action=ResetPwd&UserID="+id,
+      success:function(data){
+          data=$.parseJSON(data);
+          alert(data.msg);
+      }
+      })
+}
 function getUserHtml(rowJson){
         var trHtml="<tr>";
         trHtml+="<td>"+rowJson["User_Name"]+"</td>";
@@ -21,10 +48,10 @@ function getUserHtml(rowJson){
                +"<a class='btn btn-primary' onclick='editUser("+rowJson["User_ID"]+")' href='#'><i class='icon-user icon-white'></i> EditUser</a>"
                +"<a class='btn btn-primary dropdown-toggle' data-toggle='dropdown' href='#'><span class='caret'></span></a>"
                +"<ul class='dropdown-menu' role='menu'>"
-               +"<li><a href='#' onclick='editUser("+rowJson["User_ID"]+")><i class='icon-pencil'></i>Edit</a></li>"
-               +"<li><a href='#' onclick='resetPwd("+rowJson["User_ID"]+")><i class='icon-ban-circle'></i> ResetPwd</a></li>"
+               +"<li><a href='#' onclick='editUser("+rowJson["User_ID"]+")'><i class='icon-pencil'></i>Edit</a></li>"
+               +"<li><a href='#' onclick='resetPwd("+rowJson["User_ID"]+")'><i class='icon-ban-circle'></i> ResetPwd</a></li>"
                +"<li class='divider'></li>"
-               +"<li><a href='#' onclick='deleteUser("+rowJson["User_ID"]+")><i class='icon-trash'></i> Delete</a></li>"
+               +"<li><a href='#' onclick='delUser("+rowJson["User_ID"]+")'><i class='icon-trash'></i> Delete</a></li>"
                +"</ul>"
                +"</div>"
                +"</td>";
@@ -33,6 +60,7 @@ function getUserHtml(rowJson){
     }
   function getUserList()
   {
+      $("#userList > tbody").html("");
       $.ajax({
       type:"GET",
       url:"/UserHandler/?action=GetAllUserList",

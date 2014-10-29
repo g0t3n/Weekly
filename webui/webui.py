@@ -2,6 +2,8 @@
 #coding:utf-8
 
 import os
+import pdb
+import hashlib
 import string
 from urllib import unquote
 from json import dumps as jsondumps
@@ -33,19 +35,6 @@ class BaseHandler(tornado.web.RequestHandler):
         else:
             self.write('error:' + str(status_code))
 
-class LoginHandler(BaseHandler):
-    def get(self):
-        raise NotImplemented,""
-        self.write('<html><body><form action="/login" method="post">'
-                   'Name: <input type="text" name="name">'
-                   '<input type="submit" value="Sign in">'
-                   '</form></body></html>')
-    def post(self):
-        raise NotImplemented,""
-        # 这里补充一个，获取用户输入
-        self.get_argument("name", None)
-        self.set_secure_cookie("user", self.get_argument("name", None))
-        self.redirect("/index")
 
 class MainHandler(tornado.web.RequestHandler):
     #@tornado.web.authenticated
@@ -90,6 +79,23 @@ class ControlUnit(tornado.web.RequestHandler):
             self.render('ContentUnit/AddTask.html', display_uint = 'AddTask', 
                     taskContent="default")
 '''
+class LoginHandler(tornado.web.RequestHandler):
+      def get(self):
+          self.render('ContentUnit/Login.html',display_uint='Login')
+      def post(self):
+          User_Name = self.get_argument("User_Name")
+          User_Pwd = self.get_argument("User_Pwd")
+          if(len(User_Pwd) & len(User_Pwd)):
+              User_Pwd = hashlib.sha512(User_Pwd).hexdigest().upper()
+              UserModel = webui_config['WeeklyDb'].QueryUserWithEQFilter(User_Name=User_Name,User_Pwd=User_Pwd)
+              if(len(UserModel)):
+                  self.write("<script>alert('Succes!')</script>")
+                  self.set_secure_cookie("user", self.get_argument("name", None))
+                  self.redirect("/index")
+              else:
+                  self.write("<script>alert('Pwd Wrong!')</script>")
+          else:
+              self.write("Everyone know that pwd&username can't be null")
 class UserHandler(tornado.web.RequestHandler):
     def get(self):
         def GetAllUserList():
@@ -101,15 +107,36 @@ class UserHandler(tornado.web.RequestHandler):
             result = result[:-1] + "]"
             self.write(result)
         def GetUserInfo():
-            return ""
+            UserID=int(self.get_argument("UserID", None));
+            if UserID and isinstance(UserID, int):
+                UserModel = webui_config['WeeklyDb'].QueryUserWithEQFilter(User_ID=UserID)
+            result=jsondumps(UserModel)
+            self.write(result)
+        def DelUser():
+            UserID=int(self.get_argument("UserID", None));
+            if UserID and isinstance(UserID, int):
+                if webui_config['WeeklyDb'].DelUser(UserID) > 0:
+                    self.write("[{'success':true,'msg':'Delete success'}]")
+                else:
+                    self.write("[{'success':true,'msg':'Something wrong'}]")
+            else:
+                self.write("[{'success':true,'msg':'UserID is wrong'}]")
         action = self.get_argument("action", None)
         todo = {
             "GetAllUserList":GetAllUserList,
-            "GetUserInfo":GetUserInfo
+            "GetUserInfo":GetUserInfo,
+            "DelUser":DelUser
             }
         todo.get(action)()
     def post(self):
-        return ""
+        User_Name = self.get_argument("User_Name")
+        User_Pwd = self.get_argument("User_Pwd")
+        User_Email = self.get_argument("User_Email")
+        User_Level = self.get_argument("User_Level")
+        if webui_config['WeeklyDb'].SubmitUserInfo(User_Name, hashlib.sha512(User_Pwd).hexdigest().upper(), User_Email, User_Level):
+            self.write("<script>alert('success!');parent.$.colorbox.close();parent.getUserList()</script>")
+        else:
+            self.write("<script>alert('erorr!');parent.$.colorbox.close()</script>")
 class ControlUnit(tornado.web.RequestHandler):
     def get(self):
         def ViewTask():
@@ -135,10 +162,10 @@ class ControlUnit(tornado.web.RequestHandler):
                     taskContent="default")
         action = self.get_argument("action", None)
         todo = {
-            "UserManage":UserManage,
-            "AddTask":AddTask,
-            "ViewTask":ViewTask,
-            "AddUser":AddUser
+            "UserManage": UserManage,
+            "AddTask": AddTask,
+            "ViewTask": ViewTask,
+            "AddUser": AddUser
             }
         if not action:
             self.render('ContentUnit/default.html', display_unit = 'default')
@@ -150,7 +177,7 @@ settings = {
         # "xsrf_cookies": True,
         'template_path': os.path.join(os.path.dirname(__file__), 'templates'),
         'static_path':  os.path.join(os.path.dirname(__file__), 'static'),
-        # "login_url": "/login",
+        "login_url": "/login",
         }
 
 application = tornado.web.Application([
@@ -160,6 +187,7 @@ application = tornado.web.Application([
     (r"/AddTask/*", AddTask),
     (r"/ViewContentUnit/*", ControlUnit),
     (r"/UserHandler/*", UserHandler),
+    (r"/Login/*", LoginHandler),
     (r".*", BaseHandler),
     ], **settings)
 

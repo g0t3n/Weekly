@@ -4,6 +4,7 @@
 #  http://www.pythoncentral.io/introductory-tutorial-python-sqlalchemy/
 import os,sys,time
 
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -25,10 +26,29 @@ class WeeklySqliteDB(WeeklyDB):
         # DBSession = sessionmaker(bind=engine)
         self.session = self.init_databases(db_path)
 
-    def InsertUser(self, uid, username, password, last_login, email):
-        tmpUser = UsersTable(uid, username, password, last_login,email)
-        self.__Insert__(tmpUser)
-        raise NotImplementedError
+    def SubmitUserInfo(self, User_Name, User_Pwd, User_Email, User_Level, User_ID=None):
+        # 如果 User_id 存在则更新 否者插入
+        query_result = self.QueryTask()
+        if User_ID and isinstance(User_ID, int):
+            User_ID = int(User_ID)
+            query_result = query_result.filter(UsersTable.User_ID == User_ID)
+            if __DEBUG__:
+                assert query_result.count() < 2
+            if query_result.count() ==1:
+                # exist task and i just update some element
+                query_type.update({
+                    "User_Name": User_Name,
+                    "User_Pwd": User_Pwd,
+                    "User_Email": User_Email,
+                    "User_Level": User_Level
+                    })
+                return True
+        else:
+            # insert new content
+            tmpUser = UsersTable(User_Name=User_Name, User_Pwd=User_Pwd,
+                                 User_Email=User_Email,User_Level=User_Level)
+            self.__Insert__(tmpUser)
+            return True
     def QueryAllUserList(self, withFilter=None):
         query_result = self.__Query__(UsersTable)
         result_list=[]
@@ -41,11 +61,38 @@ class WeeklySqliteDB(WeeklyDB):
                 'User_Lastlogin' : item.User_Lastlogin,
                 })
         return result_list
-    def DelUser(self, tmpUser):
-        raise NotImplementedError
+    def QueryUserWithEQFilter(self, **kargs):
+        query_result = self.QueryUser()
+        result_list = []
+        for (k,v) in kargs.items():
+            if k == 'User_ID':
+                k = UsersTable.User_ID
+            elif k == 'User_Name':
+                k = UsersTable.User_Name
+            elif k == 'User_Pwd':
+                k = UsersTable.User_Pwd
+            query_result = query_result.filter(k==v)
+        query_result = query_result.all()
+        for item in query_result:
+            result_list.append({
+                'User_ID' : item.User_ID,
+                'User_Name' : item.User_Name,
+                'User_Email' : item.User_Email,
+                'User_Level' : item.User_Level,
+                'User_Lastlogin' : item.User_Lastlogin,
+                })
+        return result_list
+    def DelUser(self, UserID):
+        tempUser=self.QueryUser().filter(UsersTable.User_ID == UserID)
+        if self.__Del__(tempUser):
+            return 1
+        else:
+            return 0
+    def QueryUser(self, **kargs):
+        return self.__Query__(UsersTable)
 
 
-    def InsertTask(self, task_owner,  task_text, task_id=None):
+    def InsertTask(self, task_owner, task_text,task_id=None):
         update_time = get_time_as_string()
         # 如果 task_id 存在则更新 update_time 和 tasks_text 否者插入
         query_result = self.QueryTask()

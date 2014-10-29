@@ -52,7 +52,7 @@ class WeeklyDB():
         DBSession = sessionmaker(bind=engine)
         return DBSession()
 
-    def InsertUser(self, tmpUser):
+    def SubmitUserInfo(self):
         raise NotImplementedError
     def DelUser(self, tmpUser):
         raise NotImplementedError

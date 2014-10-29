@@ -1,11 +1,25 @@
 {% extends ../ContentUnit/base.html %}
 
 {% block body %}
-<script type="text/javascript">
-    </script>
-<form class="form-horizontal" style="padding-top:30px">
+<script>
+    $(function(){
+    Request = getUrlRequest(location.href);
+    if(Request["UserID"] != null){
+        $.ajax({
+        type:"GET",
+        url:"/UserHandler/?action=GetUserInfo&UserID=" + Request["UserID"],
+        success:function(data){
+           data=$.parseJSON(data);
+           fillFrom(data[0],$("form")[0])
+        }
+        })
+    }
+})
+</script>
+<form class="form-horizontal" style="padding-top:30px" method="post" action="/UserHandler/?action=SubmitUserInfo">
 
   <div class="control-group">
+      <input name="User_ID" type="hidden">
     <label class="control-label" for="inputUserName">UserName</label>
     <div class="controls">
       <input type="text" id="inputUserName" name="User_Name" placeholder="UserName">
