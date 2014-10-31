@@ -2,7 +2,7 @@
 #coding:utf-8
 # sqlalchemy orm method copy by:
 #  http://www.pythoncentral.io/introductory-tutorial-python-sqlalchemy/
-import os,sys,time
+import os,sys,time,hashlib
 
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -10,7 +10,7 @@ from sqlalchemy.orm import relationship
 
 from sqlalchemy.orm import sessionmaker
 
-from database.baseDB import UsersTable,TasksTable,WeeklyDB
+from database.baseDB import UsersTable,TasksTable,WeeklyDB,PrivilegeTable,PrivilegeToUserTable
 import database.baseDB as basedb
 from libs.libs import get_time_as_string
 __DEBUG__ = True
@@ -29,19 +29,18 @@ class WeeklySqliteDB(WeeklyDB):
     def SubmitUserInfo(self, User_Name, User_Pwd, User_Email, User_Level, User_ID=None):
         # 如果 User_id 存在则更新 否者插入
         query_result = self.QueryTask()
+        User_ID = int(User_ID)
+        import pdb;pdb.set_trace()
         if User_ID and isinstance(User_ID, int):
-            User_ID = int(User_ID)
             query_result = query_result.filter(UsersTable.User_ID == User_ID)
-            if __DEBUG__:
-                assert query_result.count() < 2
             if query_result.count() ==1:
-                # exist task and i just update some element
-                query_type.update({
+                query_result.update({
                     "User_Name": User_Name,
                     "User_Pwd": User_Pwd,
                     "User_Email": User_Email,
                     "User_Level": User_Level
                     })
+                self.session.commit()
                 return True
         else:
             # insert new content
@@ -83,15 +82,27 @@ class WeeklySqliteDB(WeeklyDB):
                 })
         return result_list
     def DelUser(self, UserID):
-        tempUser=self.QueryUser().filter(UsersTable.User_ID == UserID)
-        if self.__Del__(tempUser):
+        try:
+            tempUser=self.QueryUser().filter(UsersTable.User_ID == UserID)
+            self.__Del__(tempUser)
             return 1
-        else:
+        except Exception as err:
+            return 0
+    def ResetPwd(self,UserID):
+        try:
+            tempUser=self.QueryUser().filter(UsersTable.User_ID == UserID)
+            User_Pwd=hashlib.sha512("123456").hexdigest().upper()
+            tempUser.update(
+                {
+                    'User_Pwd' : User_Pwd
+                }
+            )
+            self.session.commit()
+            return 1
+        except Exception as err:
             return 0
     def QueryUser(self, **kargs):
         return self.__Query__(UsersTable)
-
-
     def InsertTask(self, task_owner, task_text,task_id=None):
         update_time = get_time_as_string()
         # 如果 task_id 存在则更新 update_time 和 tasks_text 否者插入
@@ -115,12 +126,10 @@ class WeeklySqliteDB(WeeklyDB):
                     tasks_text=task_text)
             self.__Insert__(tmpTask)
             return True
-
     def DelTask(self):
         raise NotImplementedError
     def QueryTask(self, **kargs):
         return self.__Query__(TasksTable)
-
     def QueryTaskWithEQFilter(self, **kargs):
         # query task as equal filter
         # 'task_owner', 'update_time', 'task_id'
@@ -144,6 +153,18 @@ class WeeklySqliteDB(WeeklyDB):
                 })
         return result_list
 
+    def GetMenu(self):
+        query_result = self.__Query__(PrivilegeTable)
+        result_list=[]
+        for item in query_result:
+            result_list.append({
+                'Privilege_ID' : item.Privilege_ID,
+                'Privilege_Name' : item.Privilege_Name,
+                'Privilege_Action' : item.Privilege_Action,
+                'Privilege_Parent' : item.Privilege_Parent,
+                'Privilege_Handler' : item.Privilege_Handler,
+                })
+        return result_list
 
 def test_main():
     from random import randrange

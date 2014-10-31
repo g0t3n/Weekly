@@ -3,19 +3,53 @@
 {% block body %}
 <script src="../static/colorBox/jquery.colorbox-min.js"></script>
 <link href="../static/colorBox/colorbox.css" rel="stylesheet">
-    <script src="../static/js/bootstrap-dropdown.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+<link href="../static/css/tree.css" rel="stylesheet">
 <script type="text/javascript">
 $(function(){
    getUserList();
    $("#addUserList").colorbox({iframe:true, width:"600px", height:"400px",rel:'group1'});
+   buildTree();
+   $("#treeList").css("display","none");
 })
+
+function buildTree()
+{
+   //$('.tree li:has(ul)').addClass('parent_li').find(' > span').attr('title', 'Collapse this branch');
+   $('.parent_li > span').on('click', function (e) {
+        var children = $(this).parent('li.parent_li').find(' > ul > li');
+        if (children.is(":visible")) {
+            children.hide('fast');
+            $(this).attr('title', 'Expand this branch').find(' > i').addClass('icon-plus-sign').removeClass('icon-minus-sign');
+        } else {
+            children.show('fast');
+            $(this).attr('title', 'Collapse this branch').find(' > i').addClass('icon-minus-sign').removeClass('icon-plus-sign');
+        }
+        e.stopPropagation();
+   });
+ $('.child_li').on('click', function (e) {
+        if($("input",$(this))[0].checked==true)
+        {
+        $("input",$(this))[0].checked=false;
+        $(this).find('i').addClass('icon-eye-close').removeClass('icon-eye-open');
+        }
+        else
+        {
+        $("input",$(this))[0].checked=true;
+        $(this).find('i').addClass('icon-eye-open').removeClass('icon-eye-close');
+        }
+   });
+}
+
+
 function editUser(id)
 {
  $.colorbox({iframe:true, width:"600px", height:"400px",href:'/ViewContentUnit/?action=AddUser&UserID='+id});
 }
 function delUser(id)
 {
- $.ajax({
+   if(confirm("Are You Sure!?")){
+   $.ajax({
       type:"GET",
       url:"/UserHandler/?action=DelUser&UserID="+id,
       success:function(data){
@@ -24,9 +58,11 @@ function delUser(id)
           getUserList();
       }
       })
+  }
 }
 function resetPwd(id)
 {
+     if(confirm("Are You Sure!?")){
      $.ajax({
       type:"GET",
       url:"/UserHandler/?action=ResetPwd&UserID="+id,
@@ -36,12 +72,13 @@ function resetPwd(id)
       }
       })
 }
+}
 function getUserHtml(rowJson){
         var trHtml="<tr>";
         trHtml+="<td>"+rowJson["User_Name"]+"</td>";
         trHtml+="<td>"+rowJson["User_Email"]+"</td>";
         trHtml+="<td>"+rowJson["User_Level"]+"</td>";
-        trHtml+="<td><a class='btn btn-info' onclick='getPowerTree("+rowJson["User_ID"]+")'>PowerList</a></td>";
+        trHtml+="<td><a class='btn btn-info' onclick='getPrivilege("+rowJson["User_ID"]+")'>PowerList</a></td>";
         trHtml+="<td>"+rowJson["User_LastLogin"]+"</td>";
         trHtml+="<td>"
                +"<div class='btn-group'>"
@@ -74,6 +111,18 @@ function getUserHtml(rowJson){
       }
       })
   }
+  function getPrivilege(id)
+  {
+       $("#treeList").css("display","");
+      $.colorbox({inline:true,href:"#treeList",onClosed:function(){$("#treeList").css("display","none");}});
+      $.ajax({
+          type:"GET",
+          url:"/UserHandler/?action=GetPrivilege",
+          success:function(data){
+              data=$.parseJSON(data);
+          }
+          })
+  }
 
 </script>
  <div>
@@ -95,6 +144,30 @@ function getUserHtml(rowJson){
         </tbody>
     </table>
 
+<div id="treeList" class="tree well">
+    <ul>
+          {% for item in MenuList %}
+            {% if item["Privilege_Parent"] == 0 %}
+             <li class="parent_li">
+                <span><i class="icon-th-list"></i> {{ item["Privilege_Name"] }}</span>
+                <ul>
+                {% for child in MenuList %}
+                {% if child["Privilege_Parent"]== item["Privilege_ID"]%}
+                <li class="child_li">
+                	<span><i class="icon-eye-open"></i>  [ {{ child['Privilege_Name'] }} ]  <input type="checkbox"></span>
+                </li>
+                {% end %}
+                {% end %}
+                    </ul>
+            </li>
+            {% end %}
+            {% end %}
+
+    </ul>
+    <div style="text-align:center;float:bottom">
+    <a class="btn btn-primary" style="width:150px;">Do it</a>
+        </div>
+</div>
   </fieldset>
 </form>
  </div>

@@ -39,7 +39,8 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(tornado.web.RequestHandler):
     #@tornado.web.authenticated
     def get(self):
-        self.render('index.html', title= 'Weekly ~~', AdminDelTask="AdminLogin")
+        MenuList = webui_config['WeeklyDb'].GetMenu()
+        self.render('index.html', title= 'Weekly ~~', MenuList = MenuList)
     def post(self):
         pass
 
@@ -89,8 +90,8 @@ class LoginHandler(tornado.web.RequestHandler):
               User_Pwd = hashlib.sha512(User_Pwd).hexdigest().upper()
               UserModel = webui_config['WeeklyDb'].QueryUserWithEQFilter(User_Name=User_Name,User_Pwd=User_Pwd)
               if(len(UserModel)):
-                  self.write("<script>alert('Succes!')</script>")
-                  self.set_secure_cookie("user", self.get_argument("name", None))
+                  self.write("<script>alert('Success!')</script>")
+                  self.set_secure_cookie("user", self.get_argument("User_Name", None))
                   self.redirect("/index")
               else:
                   self.write("<script>alert('Pwd Wrong!')</script>")
@@ -101,31 +102,50 @@ class UserHandler(tornado.web.RequestHandler):
         def GetAllUserList():
             user_list= webui_config['WeeklyDb'].QueryAllUserList()
             result = "["
-            #import pdb;pdb.set_trace();
             for i in user_list:
                 result += jsondumps(i, indent=4)+","
             result = result[:-1] + "]"
             self.write(result)
         def GetUserInfo():
-            UserID=int(self.get_argument("UserID", None));
+            UserID=int(self.get_argument("UserID", None))
             if UserID and isinstance(UserID, int):
                 UserModel = webui_config['WeeklyDb'].QueryUserWithEQFilter(User_ID=UserID)
             result=jsondumps(UserModel)
             self.write(result)
         def DelUser():
-            UserID=int(self.get_argument("UserID", None));
+            UserID=int(self.get_argument("UserID", None))
             if UserID and isinstance(UserID, int):
                 if webui_config['WeeklyDb'].DelUser(UserID) > 0:
-                    self.write("[{'success':true,'msg':'Delete success'}]")
+                    self.write('{"success":true,"msg":"Delete success"}')
                 else:
-                    self.write("[{'success':true,'msg':'Something wrong'}]")
+                    self.write('{"wrong":true,"msg":"Something wrong"}')
             else:
-                self.write("[{'success':true,'msg':'UserID is wrong'}]")
+                self.write('{"success":true,"msg":"UserID is wrong"}')
+        def ResetPwd():
+            UserID=int(self.get_argument("UserID", None))
+            if UserID and isinstance(UserID, int):
+                if webui_config['WeeklyDb'].ResetPwd(UserID) > 0:
+                   self.write('{"success":true,"msg":"Reset success"}')
+                else:
+                    self.write('{"wrong":true,"msg":"Reset wrong"}')
+            else:
+                 self.write('{"success":true,"msg":"UserID is wrong"}')
+        def GetPrivilege():
+            privilege_list = webui_config['WeeklyDb'].GetMenu()
+            result = "["
+            for i in privilege_list:
+                result += "{"
+                result += "\"text\":\"<input type='checkbox'>"+i["Privilege_Name"]+"\""
+                result += "},"
+            result = result[:-1] + "]"
+            self.write(result)
         action = self.get_argument("action", None)
         todo = {
             "GetAllUserList":GetAllUserList,
             "GetUserInfo":GetUserInfo,
-            "DelUser":DelUser
+            "DelUser":DelUser,
+            "ResetPwd":ResetPwd,
+            "GetPrivilege":GetPrivilege
             }
         todo.get(action)()
     def post(self):
@@ -133,7 +153,11 @@ class UserHandler(tornado.web.RequestHandler):
         User_Pwd = self.get_argument("User_Pwd")
         User_Email = self.get_argument("User_Email")
         User_Level = self.get_argument("User_Level")
-        if webui_config['WeeklyDb'].SubmitUserInfo(User_Name, hashlib.sha512(User_Pwd).hexdigest().upper(), User_Email, User_Level):
+        if(len(self.get_argument("User_ID"))>0):
+            User_ID=self.get_argument("User_ID")
+        else:
+            User_ID=0
+        if webui_config['WeeklyDb'].SubmitUserInfo(User_Name, hashlib.sha512(User_Pwd).hexdigest().upper(), User_Email, User_Level,User_ID):
             self.write("<script>alert('success!');parent.$.colorbox.close();parent.getUserList()</script>")
         else:
             self.write("<script>alert('erorr!');parent.$.colorbox.close()</script>")
@@ -155,8 +179,9 @@ class ControlUnit(tornado.web.RequestHandler):
             self.render('ContentUnit/AddTask.html', display_uint = 'AddTask',
                     taskContent="default")
         def UserManage():
+            MenuList = webui_config['WeeklyDb'].GetMenu()
             self.render('UserManage/UserManage.html', display_uint = 'UserManage',
-                    taskContent="default")
+                    taskContent="default",MenuList = MenuList)
         def AddUser():
             self.render('UserManage/AddUser.html', display_uint = 'AddUser',
                     taskContent="default")

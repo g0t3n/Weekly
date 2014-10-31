@@ -20,10 +20,24 @@ class UsersTable(BaseDb):
     User_ID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     User_Name = Column(String(450), unique=True, nullable=False)
     User_Pwd = Column(String(450), nullable=False)
-    User_Lastlogin = Column(Integer,)
+    User_Lastlogin = Column(Integer)
     User_Email = Column(String(450), unique=True)
     User_Level = Column(String(450))
 
+class PrivilegeTable(BaseDb):
+    __tablename__ = 'Privilege'
+    Privilege_ID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    Privilege_Name = Column(String(450), nullable=False)
+    Privilege_Action = Column(String(450))
+    Privilege_Parent = Column(Integer)
+    Privilege_Handler = Column(String(450))
+    Privilege_Order= Column(Integer)
+
+class PrivilegeToUserTable(BaseDb):
+    __tablename__ = 'PrivilegeToUser'
+    PrivilegeToUserTable_ID=Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    Privilege_PID = Column(Integer)
+    Privilege_UID = Column(Integer)
 
 class TasksTable(BaseDb):
     __tablename__ = 'Tasks'
@@ -76,7 +90,8 @@ class WeeklyDB():
     def __Update__(self, obj):
         pass
     def __Del__(self, obj):
-        self.session.delete(obj)
+        obj.delete()
+        self.session.commit()
         self.session.flush()
     def __Query__(self, query_type):
         query_result = self.session.query(query_type)  #UserTable,TasksTable

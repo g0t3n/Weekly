@@ -27,12 +27,21 @@ $("#menuUl > li").click(function(){
         <div class="span3">
           <div class="well sidebar-nav">
             <ul id="menuUl" class="nav nav-list">
+            {% for item in MenuList %}
+            {% if item["Privilege_Parent"] == 0 %}
+                <li class="nav-header">{{ item["Privilege_Name"] }}</li>
+                {% for child in MenuList %}
+                {% if child["Privilege_Parent"]== item["Privilege_ID"]%}
+                <li id="{{ child['Privilege_Action'] }}"><a href="#">[ {{ child['Privilege_Name'] }} ]</a></li>
+                {% end %}
+                {% end %}
+            {% end %}
+            {% end %}
               <li class="nav-header">Palnet</li>
               <li id="ViewTask"><a href="#">[ View Task ]</a></li>
               <li id="AddTask"><a href="#">[ Add Task ]</a></li>
               <li id="UserManage"><a href="#">[ User Manage ]</a></li>
               <li class="nav-header">Sidebar</li>
-              {{ AdminDelTask }}
             </ul>
           </div><!--/.well -->
         </div><!--/span-->
