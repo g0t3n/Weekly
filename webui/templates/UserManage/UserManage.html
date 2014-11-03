@@ -113,13 +113,18 @@ function getUserHtml(rowJson){
   }
   function getPrivilege(id)
   {
-       $("#treeList").css("display","");
+      $("#treeList").css("display","");
       $.colorbox({inline:true,href:"#treeList",onClosed:function(){$("#treeList").css("display","none");}});
       $.ajax({
           type:"GET",
-          url:"/UserHandler/?action=GetPrivilege",
+          url:"/PrivilegeHandler/?action=GetPrivilege&UserID="+id,
           success:function(data){
-              data=$.parseJSON(data);
+              PList=data.split(",")
+              for(i in PList)
+              {
+              $("#treeList").find("#a"+PList[i])[0].checked=true;
+
+              }
           }
           })
   }
@@ -154,7 +159,7 @@ function getUserHtml(rowJson){
                 {% for child in MenuList %}
                 {% if child["Privilege_Parent"]== item["Privilege_ID"]%}
                 <li class="child_li">
-                	<span><i class="icon-eye-open"></i>  [ {{ child['Privilege_Name'] }} ]  <input type="checkbox"></span>
+                	<span><i class="icon-eye-close"></i>  [ {{ child['Privilege_Name'] }} ]  <input id="a{{ child['Privilege_ID'] }}" type="checkbox"></span>
                 </li>
                 {% end %}
                 {% end %}

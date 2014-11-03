@@ -103,6 +103,18 @@ class WeeklySqliteDB(WeeklyDB):
             return 0
     def QueryUser(self, **kargs):
         return self.__Query__(UsersTable)
+    def QueryUserPrivilege(self,UserID):
+        query_result = self.__Query__(PrivilegeToUserTable).filter(PrivilegeToUserTable.Privilege_UID == UserID)
+        result_list=[]
+        for item in query_result:
+            result_list.append({
+                'Privilege_PID' : item.Privilege_PID,
+                'Privilege_UID' : item.Privilege_UID,
+                })
+        return result_list
+
+
+
     def InsertTask(self, task_owner, task_text,task_id=None):
         update_time = get_time_as_string()
         # 如果 task_id 存在则更新 update_time 和 tasks_text 否者插入

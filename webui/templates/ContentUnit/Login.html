@@ -5,6 +5,10 @@
 <link href="../static/css/AdminLogin.css" rel="stylesheet" type="text/css" />
 <script src="../static/js/jquery.min.js" type="text/javascript"></script>
 <script type="text/javascript">
+    if(top!=this)
+    {
+        this.parent.location.href=this.location.href;
+    }
 </script>
 </head>
 <body>

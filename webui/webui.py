@@ -24,7 +24,9 @@ webui_config = {
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
-        return self.get_secure_cookie("user")
+        return self.get_secure_cookie("User_ID")
+    def CheckPrivilege(self,Handler):
+        return ""
     def get(self):
         self.write_error(404)
     def post(self):
@@ -40,7 +42,8 @@ class MainHandler(tornado.web.RequestHandler):
     #@tornado.web.authenticated
     def get(self):
         MenuList = webui_config['WeeklyDb'].GetMenu()
-        self.render('index.html', title= 'Weekly ~~', MenuList = MenuList)
+        UserName = self.get_secure_cookie("UName")
+        self.render('index.html', title= 'Weekly ~~', MenuList = MenuList , UserName = UserName)
     def post(self):
         pass
 
@@ -91,12 +94,13 @@ class LoginHandler(tornado.web.RequestHandler):
               UserModel = webui_config['WeeklyDb'].QueryUserWithEQFilter(User_Name=User_Name,User_Pwd=User_Pwd)
               if(len(UserModel)):
                   self.write("<script>alert('Success!')</script>")
-                  self.set_secure_cookie("user", self.get_argument("User_Name", None))
+                  self.set_secure_cookie("UName", UserModel[0]["User_Name"],expires_days=1)
+                  self.set_secure_cookie("UID", str(UserModel[0]["User_ID"]),expires_days=1)
                   self.redirect("/index")
               else:
                   self.write("<script>alert('Pwd Wrong!')</script>")
           else:
-              self.write("Everyone know that pwd&username can't be null")
+              self.write("<script>Everyone know that pwd&username can't be null</script>")
 class UserHandler(tornado.web.RequestHandler):
     def get(self):
         def GetAllUserList():
@@ -130,22 +134,13 @@ class UserHandler(tornado.web.RequestHandler):
                     self.write('{"wrong":true,"msg":"Reset wrong"}')
             else:
                  self.write('{"success":true,"msg":"UserID is wrong"}')
-        def GetPrivilege():
-            privilege_list = webui_config['WeeklyDb'].GetMenu()
-            result = "["
-            for i in privilege_list:
-                result += "{"
-                result += "\"text\":\"<input type='checkbox'>"+i["Privilege_Name"]+"\""
-                result += "},"
-            result = result[:-1] + "]"
-            self.write(result)
+
         action = self.get_argument("action", None)
         todo = {
             "GetAllUserList":GetAllUserList,
             "GetUserInfo":GetUserInfo,
             "DelUser":DelUser,
             "ResetPwd":ResetPwd,
-            "GetPrivilege":GetPrivilege
             }
         todo.get(action)()
     def post(self):
@@ -161,6 +156,32 @@ class UserHandler(tornado.web.RequestHandler):
             self.write("<script>alert('success!');parent.$.colorbox.close();parent.getUserList()</script>")
         else:
             self.write("<script>alert('erorr!');parent.$.colorbox.close()</script>")
+
+class PrivilegeHandler(tornado.web.RequestHandler):
+    def get(self):
+        def GetPrivilege():
+            UserID=int(self.get_argument("UserID", None))
+            privilege_list = webui_config['WeeklyDb'].QueryUserPrivilege(UserID)
+            result = ""
+            for i in privilege_list:
+                result += str(i["Privilege_PID"]) + ","
+            result = result[:-1]
+            self.write(result)
+        action = self.get_argument("action", None)
+        todo = {
+            "GetPrivilege":GetPrivilege
+            }
+        todo.get(action)()
+
+    def post(self):
+        def UpdatePrivilege():
+            UserID=int(self.get_argument("UserID", None))
+        action = self.get_argument("action", None)
+        todo = {
+            "UpdatePrivilege":UpdatePrivilege
+            }
+        todo.get(action)()
+
 class ControlUnit(tornado.web.RequestHandler):
     def get(self):
         def ViewTask():
@@ -185,12 +206,16 @@ class ControlUnit(tornado.web.RequestHandler):
         def AddUser():
             self.render('UserManage/AddUser.html', display_uint = 'AddUser',
                     taskContent="default")
+        def Logout():
+            self.clear_all_cookies()
+            self.redirect("/Login")
         action = self.get_argument("action", None)
         todo = {
             "UserManage": UserManage,
             "AddTask": AddTask,
             "ViewTask": ViewTask,
-            "AddUser": AddUser
+            "AddUser": AddUser,
+            "Logout":Logout
             }
         if not action:
             self.render('ContentUnit/default.html', display_unit = 'default')
@@ -202,17 +227,18 @@ settings = {
         # "xsrf_cookies": True,
         'template_path': os.path.join(os.path.dirname(__file__), 'templates'),
         'static_path':  os.path.join(os.path.dirname(__file__), 'static'),
-        "login_url": "/login",
+        "login_url": "/Login",
         }
 
 application = tornado.web.Application([
     (r"/", MainHandler),
-     # (r"/login", LoginHandler),
+    # (r"/login", LoginHandler),
     (r"/index*", MainHandler),
     (r"/AddTask/*", AddTask),
     (r"/ViewContentUnit/*", ControlUnit),
     (r"/UserHandler/*", UserHandler),
     (r"/Login/*", LoginHandler),
+    (r"/PrivilegeHandler/*", PrivilegeHandler),
     (r".*", BaseHandler),
     ], **settings)
 
