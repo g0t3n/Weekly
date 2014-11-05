@@ -10,6 +10,7 @@ from json import dumps as jsondumps
 
 import tornado.ioloop
 import tornado.web
+import copy
 
 from libs.libs import get_time_as_string
 
@@ -24,9 +25,17 @@ webui_config = {
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
-        return self.get_secure_cookie("User_ID")
+        return self.get_secure_cookie("UID")
     def CheckPrivilege(self,Handler):
-        return ""
+        PrivilegeList = webui_config['WeeklyDb'].QueryUserPrivilegeList(self.current_user)
+        HasPrivileg = False
+        for Privilege in PrivilegeList:
+            if(Privilege["Privilege_Action"]==Handler):
+                HasPrivileg = True
+                break
+        return HasPrivileg
+
+
     def get(self):
         self.write_error(404)
     def post(self):
@@ -37,24 +46,32 @@ class BaseHandler(tornado.web.RequestHandler):
         else:
             self.write('error:' + str(status_code))
 
+# def CheckPrivilege(cls,Handler):
+#         def handle_func(func):
+#             if(cls.get_secure_cookie("User_ID")==""):
+#                 pdb.set_trace()
+#                 cls.redirect("/Login")
+#             return func()
+#         return handle_func
 
-
-class MainHandler(tornado.web.RequestHandler):
-    @BaseHandler.CheckPrivilege
+class MainHandler(BaseHandler):
+    @tornado.web.authenticated
     def get(self):
         UserName = self.get_secure_cookie("UName")
         UserID = int(self.get_secure_cookie("UID"))
         MenuList = webui_config['WeeklyDb'].GetMenu()
-        AllList = set(MenuList)
+        AllList = copy.deepcopy(MenuList)
         PrivilegeList = webui_config['WeeklyDb'].QueryUserPrivilege(UserID).split(",")
         for Menu in AllList:
             if Menu["Privilege_Parent"]!=0 and PrivilegeList.count(str(Menu["Privilege_ID"]))==0:
                 MenuList.remove(Menu)
         self.render('index.html', title= 'Weekly ~~', MenuList = MenuList , UserName = UserName)
+    @tornado.web.authenticated
     def post(self):
         pass
 
-class AddTask(tornado.web.RequestHandler):
+class AddTask(BaseHandler):
+    @tornado.web.authenticated
     def post(self):
         taskcontent = self.get_argument('taskcontent', None)
         uid = self.get_argument('uid', 53)
@@ -90,7 +107,7 @@ class ControlUnit(tornado.web.RequestHandler):
             self.render('ContentUnit/AddTask.html', display_uint = 'AddTask', 
                     taskContent="default")
 '''
-class LoginHandler(tornado.web.RequestHandler):
+class LoginHandler(BaseHandler):
       def get(self):
           self.render('ContentUnit/Login.html',display_uint='Login')
       def post(self):
@@ -108,7 +125,9 @@ class LoginHandler(tornado.web.RequestHandler):
                   self.write("<script>alert('Pwd Wrong!')</script>")
           else:
               self.write("<script>Everyone know that pwd&username can't be null</script>")
-class UserHandler(tornado.web.RequestHandler):
+
+class UserHandler(BaseHandler):
+    @tornado.web.authenticated
     def get(self):
         def GetAllUserList():
             user_list= webui_config['WeeklyDb'].QueryAllUserList()
@@ -149,22 +168,27 @@ class UserHandler(tornado.web.RequestHandler):
             "DelUser":DelUser,
             "ResetPwd":ResetPwd,
             }
-        todo.get(action)()
+        if(self.CheckPrivilege("UserMange")):
+           todo.get(action)()
+    @tornado.web.authenticated
     def post(self):
-        User_Name = self.get_argument("User_Name")
-        User_Pwd = self.get_argument("User_Pwd")
-        User_Email = self.get_argument("User_Email")
-        User_Level = self.get_argument("User_Level")
-        if(len(self.get_argument("User_ID"))>0):
-            User_ID=self.get_argument("User_ID")
-        else:
-            User_ID=0
-        if webui_config['WeeklyDb'].SubmitUserInfo(User_Name, hashlib.sha512(User_Pwd).hexdigest().upper(), User_Email, User_Level,User_ID):
-            self.write("<script>alert('success!');parent.$.colorbox.close();parent.getUserList()</script>")
-        else:
-            self.write("<script>alert('erorr!');parent.$.colorbox.close()</script>")
+        if(self.CheckPrivilege("action")):
+            User_Name = self.get_argument("User_Name")
+            User_Pwd = self.get_argument("User_Pwd")
+            User_Email = self.get_argument("User_Email")
+            User_Level = self.get_argument("User_Level")
+            if(len(self.get_argument("User_ID"))>0):
+                User_ID=self.get_argument("User_ID")
+            else:
+                User_ID=0
+            if webui_config['WeeklyDb'].SubmitUserInfo(User_Name, hashlib.sha512(User_Pwd).hexdigest().upper(), User_Email, User_Level,User_ID):
+                self.write("<script>alert('success!');parent.$.colorbox.close();parent.getUserList()</script>")
+            else:
+                self.write("<script>alert('erorr!');parent.$.colorbox.close()</script>")
 
-class PrivilegeHandler(tornado.web.RequestHandler):
+
+class PrivilegeHandler(BaseHandler):
+    @tornado.web.authenticated
     def get(self):
         def GetPrivilege():
             UserID=int(self.get_argument("UserID", None))
@@ -175,6 +199,7 @@ class PrivilegeHandler(tornado.web.RequestHandler):
             "GetPrivilege":GetPrivilege
             }
         todo.get(action)()
+    @tornado.web.authenticated
     def post(self):
         def SubmitPrivilege():
             UserID=int(self.get_argument("UserID", None))
@@ -188,7 +213,9 @@ class PrivilegeHandler(tornado.web.RequestHandler):
             }
         todo.get(action)()
 
-class ControlUnit(tornado.web.RequestHandler):
+
+class ControlUnit(BaseHandler):
+    @tornado.web.authenticated
     def get(self):
         def ViewTask():
             fromDate = self.get_argument("fromDate", None)
@@ -225,7 +252,7 @@ class ControlUnit(tornado.web.RequestHandler):
             }
         if not action:
             self.render('ContentUnit/default.html', display_unit = 'default')
-        else:
+        elif(self.CheckPrivilege("action")):
             todo.get(action)()
 
 settings = {

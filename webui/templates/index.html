@@ -27,6 +27,7 @@ $("#menuUl > li").click(function(){
         <div class="span3">
           <div class="well sidebar-nav">
             <ul id="menuUl" class="nav nav-list">
+            <li class="nav-header">~~不要点我~~(应邀归来)</li>
             {% for item in MenuList %}
             {% if item["Privilege_Parent"] == 0 %}
                 <li class="nav-header">{{ item["Privilege_Name"] }}</li>

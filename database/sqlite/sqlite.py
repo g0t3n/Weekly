@@ -106,6 +106,17 @@ class WeeklySqliteDB(WeeklyDB):
     def QueryUserPrivilege(self,UserID):
         query_result = self.__Query__(PrivilegeToUserTable).filter(PrivilegeToUserTable.Privilege_UID == UserID)
         return query_result[0].Privilege_PID
+    def QueryUserPrivilegeList(self,UserID):
+        PIDs=self.QueryUserPrivilege(UserID)
+        query_result = self.__Query__(PrivilegeTable).filter("Privilege_ID in ("+PIDs+")").all()
+        result_list=[]
+        for item in query_result:
+            result_list.append({
+                'Privilege_ID' : item.Privilege_ID,
+                'Privilege_Action' : item.Privilege_Action,
+                'Privilege_Handler' : item.Privilege_Handler
+                })
+        return result_list
     def UpdateUserPrivilege(self,UserID,PrivilegeID):
         model = self.__Query__(PrivilegeToUserTable).filter(PrivilegeToUserTable.Privilege_UID == UserID)
         import pdb;pdb.set_trace()
@@ -131,9 +142,9 @@ class WeeklySqliteDB(WeeklyDB):
             import IPython;IPython.embed()
             if query_result.count() ==1:
                 # exist task and i just update some element
-                query_type.update({
+                query_result.update({
                     "task_time" : update_time,
-                    "tasks_text" : tasks_text
+                    "tasks_text" : task_text
                     })
                 return True
         else:
