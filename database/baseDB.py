@@ -36,7 +36,7 @@ class PrivilegeTable(BaseDb):
 class PrivilegeToUserTable(BaseDb):
     __tablename__ = 'PrivilegeToUser'
     PrivilegeToUserTable_ID=Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-    Privilege_PID = Column(Integer)
+    Privilege_PID = Column(String(50))
     Privilege_UID = Column(Integer)
 
 class TasksTable(BaseDb):

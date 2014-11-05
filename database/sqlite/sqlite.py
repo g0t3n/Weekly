@@ -30,7 +30,6 @@ class WeeklySqliteDB(WeeklyDB):
         # 如果 User_id 存在则更新 否者插入
         query_result = self.QueryTask()
         User_ID = int(User_ID)
-        import pdb;pdb.set_trace()
         if User_ID and isinstance(User_ID, int):
             query_result = query_result.filter(UsersTable.User_ID == User_ID)
             if query_result.count() ==1:
@@ -40,6 +39,7 @@ class WeeklySqliteDB(WeeklyDB):
                     "User_Email": User_Email,
                     "User_Level": User_Level
                     })
+                import pdb;pdb.set_trace()
                 self.session.commit()
                 return True
         else:
@@ -105,13 +105,17 @@ class WeeklySqliteDB(WeeklyDB):
         return self.__Query__(UsersTable)
     def QueryUserPrivilege(self,UserID):
         query_result = self.__Query__(PrivilegeToUserTable).filter(PrivilegeToUserTable.Privilege_UID == UserID)
-        result_list=[]
-        for item in query_result:
-            result_list.append({
-                'Privilege_PID' : item.Privilege_PID,
-                'Privilege_UID' : item.Privilege_UID,
-                })
-        return result_list
+        return query_result[0].Privilege_PID
+    def UpdateUserPrivilege(self,UserID,PrivilegeID):
+        model = self.__Query__(PrivilegeToUserTable).filter(PrivilegeToUserTable.Privilege_UID == UserID)
+        import pdb;pdb.set_trace()
+        if(model.count()==1):
+            model.update({"Privilege_PID":PrivilegeID})
+        else:
+            tmp = PrivilegeToUserTable(Privilege_UID=UserID, Privilege_PID=PrivilegeID)
+            self.__Insert__(tmp)
+        self.session.commit()
+        return True
 
 
 

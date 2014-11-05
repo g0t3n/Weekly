@@ -38,11 +38,18 @@ class BaseHandler(tornado.web.RequestHandler):
             self.write('error:' + str(status_code))
 
 
+
 class MainHandler(tornado.web.RequestHandler):
-    #@tornado.web.authenticated
+    @BaseHandler.CheckPrivilege
     def get(self):
-        MenuList = webui_config['WeeklyDb'].GetMenu()
         UserName = self.get_secure_cookie("UName")
+        UserID = int(self.get_secure_cookie("UID"))
+        MenuList = webui_config['WeeklyDb'].GetMenu()
+        AllList = set(MenuList)
+        PrivilegeList = webui_config['WeeklyDb'].QueryUserPrivilege(UserID).split(",")
+        for Menu in AllList:
+            if Menu["Privilege_Parent"]!=0 and PrivilegeList.count(str(Menu["Privilege_ID"]))==0:
+                MenuList.remove(Menu)
         self.render('index.html', title= 'Weekly ~~', MenuList = MenuList , UserName = UserName)
     def post(self):
         pass
@@ -161,24 +168,23 @@ class PrivilegeHandler(tornado.web.RequestHandler):
     def get(self):
         def GetPrivilege():
             UserID=int(self.get_argument("UserID", None))
-            privilege_list = webui_config['WeeklyDb'].QueryUserPrivilege(UserID)
-            result = ""
-            for i in privilege_list:
-                result += str(i["Privilege_PID"]) + ","
-            result = result[:-1]
+            result = webui_config['WeeklyDb'].QueryUserPrivilege(UserID)
             self.write(result)
         action = self.get_argument("action", None)
         todo = {
             "GetPrivilege":GetPrivilege
             }
         todo.get(action)()
-
     def post(self):
-        def UpdatePrivilege():
+        def SubmitPrivilege():
             UserID=int(self.get_argument("UserID", None))
+            PrivilegeList=self.get_arguments("privileges")
+            Privilege=",".join(PrivilegeList)
+            if(webui_config['WeeklyDb'].UpdateUserPrivilege(UserID,Privilege)):
+                self.write('{"success":true,"msg":"Update success"}')
         action = self.get_argument("action", None)
         todo = {
-            "UpdatePrivilege":UpdatePrivilege
+            "SubmitPrivilege":SubmitPrivilege
             }
         todo.get(action)()
 
@@ -208,7 +214,7 @@ class ControlUnit(tornado.web.RequestHandler):
                     taskContent="default")
         def Logout():
             self.clear_all_cookies()
-            self.redirect("/Login")
+            self.redirect("/Login/")
         action = self.get_argument("action", None)
         todo = {
             "UserManage": UserManage,

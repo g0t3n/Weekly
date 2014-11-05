@@ -3,7 +3,7 @@
 {% block body %}
 <script src="../static/colorBox/jquery.colorbox-min.js"></script>
 <link href="../static/colorBox/colorbox.css" rel="stylesheet">
-    <script src="../static/js/bootstrap.min.js"></script>
+<script src="../static/js/bootstrap.min.js"></script>
 <link href="../static/css/tree.css" rel="stylesheet">
 <script type="text/javascript">
 $(function(){
@@ -114,7 +114,12 @@ function getUserHtml(rowJson){
   function getPrivilege(id)
   {
       $("#treeList").css("display","");
+      $(".parent_li > ul > li").find('i').addClass('icon-eye-close').removeClass('icon-eye-open');
+      for (i in $("#treeList").find('input')){
+          $("#treeList").find('input')[i].checked=false;
+      }
       $.colorbox({inline:true,href:"#treeList",onClosed:function(){$("#treeList").css("display","none");}});
+      $("#UserID").val(id);
       $.ajax({
           type:"GET",
           url:"/PrivilegeHandler/?action=GetPrivilege&UserID="+id,
@@ -122,58 +127,72 @@ function getUserHtml(rowJson){
               PList=data.split(",")
               for(i in PList)
               {
-              $("#treeList").find("#a"+PList[i])[0].checked=true;
-
+              $("#i"+PList[i]).removeClass("icon-eye-close").addClass("icon-eye-open");
+              $("#i"+PList[i]+" ~ input")[0].checked=true;
               }
           }
-          })
+      })
   }
 
+    function submitPrivilege()
+    {
+        $.ajax({
+            type:"Post",
+            url:"/PrivilegeHandler/?action=SubmitPrivilege",
+            data:$("input").serialize(),
+            success:function(data){
+                data=$.parseJSON(data);
+                alert(data.msg);
+            }
+        })
+    }
+
+
 </script>
- <div>
+<div>
+        <fieldset>
+            <legend>用户列表</legend>
+            <div><a class="btn btn-primary" id="addUserList" href="/ViewContentUnit/?action=AddUser">AddUser</a></div>
+            <table id="userList" class="table">
+                <thead>
+                <td>UserName</td>
+                <td>Mail</td>
+                <td>Level</td>
+                <td>Power</td>
+                <td>LastLogin</td>
+                <td>Edit</td>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
 <form>
-  <fieldset>
-    <legend>用户列表</legend>
-      <div><a class="btn btn-primary" id="addUserList" href="/ViewContentUnit/?action=AddUser">AddUser</a></div>
-    <table id="userList" class="table">
-        <thead>
-        <td>UserName</td>
-        <td>Mail</td>
-        <td>Level</td>
-        <td>Power</td>
-        <td>LastLogin</td>
-        <td>Edit</td>
-        </thead>
-        <tbody>
-
-        </tbody>
-    </table>
-
-<div id="treeList" class="tree well">
-    <ul>
-          {% for item in MenuList %}
-            {% if item["Privilege_Parent"] == 0 %}
-             <li class="parent_li">
-                <span><i class="icon-th-list"></i> {{ item["Privilege_Name"] }}</span>
+            <div id="treeList" class="tree well">
+                <input type="hidden" name="UserID" id="UserID"/>
                 <ul>
-                {% for child in MenuList %}
-                {% if child["Privilege_Parent"]== item["Privilege_ID"]%}
-                <li class="child_li">
-                	<span><i class="icon-eye-close"></i>  [ {{ child['Privilege_Name'] }} ]  <input id="a{{ child['Privilege_ID'] }}" type="checkbox"></span>
-                </li>
-                {% end %}
-                {% end %}
-                    </ul>
-            </li>
-            {% end %}
-            {% end %}
-
-    </ul>
-    <div style="text-align:center;float:bottom">
-    <a class="btn btn-primary" style="width:150px;">Do it</a>
-        </div>
+                    {% for item in MenuList %}
+                    {% if item["Privilege_Parent"] == 0 %}
+                    <li class="parent_li">
+                        <span><i class="icon-th-list"></i> {{ item["Privilege_Name"] }}</span>
+                        <ul>
+                            {% for child in MenuList %}
+                            {% if child["Privilege_Parent"]== item["Privilege_ID"]%}
+                            <li class="child_li">
+                                <span><i id="i{{ child['Privilege_ID'] }}" class="icon-eye-close"></i>  [ {{ child['Privilege_Name'] }} ]  <input
+                                        name="privileges" value="{{ child['Privilege_ID'] }}" type="checkbox"></span>
+                            </li>
+                            {% end %}
+                            {% end %}
+                        </ul>
+                    </li>
+                    {% end %}
+                    {% end %}
+                </ul>
+                <div style="text-align:center;float:bottom">
+                    <a class="btn btn-primary" style="width:150px;" onclick="submitPrivilege()">Do it</a>
+                </div>
+            </div>
+                </form>
+        </fieldset>
 </div>
-  </fieldset>
-</form>
- </div>
 {% end %}
