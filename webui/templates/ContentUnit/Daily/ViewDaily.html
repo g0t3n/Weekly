@@ -1,0 +1,75 @@
+{% extends ../base.html %}
+
+{% block body %}
+<script type="text/javascript"  src="../static/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript">
+$(function(){
+  $('#datetimepicker').datetimepicker({
+    format: 'yyyy-MM-dd',
+    language: 'en',
+    pickDate: true,
+    pickTime: false,
+    inputMask: true
+  });
+  $('#datetimepicker2').datetimepicker({
+    format: 'yyyy-MM-dd',
+    language: 'en',
+    pickDate: true,
+    pickTime: false,
+    inputMask: true
+  });
+})
+
+function getDailyList(){
+$.ajax({
+      type : "GET",
+      url : "/DailyHandler?action=GetDaily&UserID="+$("#userID").val()+"&Start="+$("#timeStart").val()
+      +"&End="+$("#timeEnd").val()+"&Page="+$("#datetimepicker").val(),
+      success : function(data){
+          if(data==""){$("#dailyUL").html("");return;}
+          data=$.parseJSON(data);
+          dailyList="";
+          for(i in data){
+              dailyList+="<hr><li>"
+              dailyList+="<p><span>日期:"+data[i].Daily_Time+"</span>";
+              dailyList+="<span style='margin-left:150px'>用户名:"+data[i].Daily_Owner+"</span></p>";
+              dailyList+="<p>内容:"+data[i].Daily_Content+"</p>";
+              dailyList+="<p>问题:"+data[i].Daily_Question+"</p></li>";
+          }
+          $("#dailyUL").html(dailyList);
+      }
+    })
+}
+</script>
+<div class="hero-unit">
+  从:
+  <div id="datetimepicker" class="input-append date">
+  <input type="text" id="timeStart" />
+  <span class="add-on">
+    <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+  </span>
+  </div>
+    到:
+<div id="datetimepicker2" class="input-append date">
+  <input type="text" id="timeEnd" />
+  <span class="add-on">
+    <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+  </span>
+</div>
+  用户名：<select id="userID">
+        <option value="0">所有人</option>
+        {% for item in UserList %}
+    <option value="{{item['User_ID']}}">{{item['User_Name']}}</option>
+        {% end %}
+  </select>
+   <input type="button" class="btn btn-primary" value="Go" onclick="getDailyList()"/>
+
+        <div>
+            <ul id="dailyUL">
+            </ul>
+        </div>
+
+    </div>
+<div>
+    </div>
+{% end %}

@@ -30,7 +30,7 @@ class PrivilegeTable(BaseDb):
     Privilege_Name = Column(String(450), nullable=False)
     Privilege_Action = Column(String(450))
     Privilege_Parent = Column(Integer)
-    Privilege_Handler = Column(String(450))
+    Privilege_ControlAction = Column(String(450))
     Privilege_Order= Column(Integer)
 
 class PrivilegeToUserTable(BaseDb):
@@ -45,6 +45,15 @@ class TasksTable(BaseDb):
     update_time = Column(String, nullable=False)
     tasks_text = Column(String, nullable=False)
     task_id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+
+class DailyTable(BaseDb):
+    __tablename__ = 'Daily'
+    Daily_Owner = Column(Integer, nullable=False)
+    Daily_Time = Column(String, nullable=False)
+    Daily_Content = Column(String, nullable=False)
+    Daily_Question = Column(String, nullable=False)
+    Daily_ID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+
 
 class WeeklyDB():
     def __init__(self,):

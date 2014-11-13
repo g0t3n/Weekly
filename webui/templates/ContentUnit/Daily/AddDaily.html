@@ -1,0 +1,36 @@
+{% extends ../base.html %}
+
+{% block body %}
+
+<script type="text/javascript">
+  function submitTask(){
+    var data = "DailyContent=" + $('#dailyArea').val()+"&DailyQuestion="+$('#questionArea').val();
+    $.ajax({
+      type : "POST",
+      url : "/DailyHandler?action=AddDaily",
+      data : data,
+      success : function(){
+                alert("Post Daily success");
+      },
+      error : function(wrongMsg){
+                alert(wrongMsg)
+      }
+    })
+  }
+</script>
+
+
+<div class="hero-unit">
+  <div>
+   <h3>今天是：{{date}}</h3>
+  <hr>
+  <p>你在干嘛在干嘛～～</p>
+    <textarea id="dailyArea" class="form-control" rows="3" style="margin: 0px 0px 10px; width: 710px; height: 280px;">{{DailyContent}}</textarea>
+  <p>遇到什么问题？</p>
+    <textarea id="questionArea" class="form-control" rows="2" style="margin: 0px 0px 10px; width: 710px; height: 140px;">{{DailyQuestion}}</textarea>
+  </div>
+  <div class="modal-fotter">
+    <button id="submitTaskButton" onclick="submitTask()" class="btn btn-primary" data-loading-text="Loading...">保存更改</button>
+  </div>
+</div>
+{% end %}

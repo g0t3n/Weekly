@@ -10,7 +10,7 @@ from sqlalchemy.orm import relationship
 
 from sqlalchemy.orm import sessionmaker
 
-from database.baseDB import UsersTable,TasksTable,WeeklyDB,PrivilegeTable,PrivilegeToUserTable
+from database.baseDB import UsersTable,TasksTable,WeeklyDB,PrivilegeTable,PrivilegeToUserTable,DailyTable
 import database.baseDB as basedb
 from libs.libs import get_time_as_string
 __DEBUG__ = True
@@ -26,12 +26,12 @@ class WeeklySqliteDB(WeeklyDB):
         # DBSession = sessionmaker(bind=engine)
         self.session = self.init_databases(db_path)
 
+###用户
     def SubmitUserInfo(self, User_Name, User_Pwd, User_Email, User_Level, User_ID=None):
         # 如果 User_id 存在则更新 否者插入
-        query_result = self.QueryTask()
         User_ID = int(User_ID)
         if User_ID and isinstance(User_ID, int):
-            query_result = query_result.filter(UsersTable.User_ID == User_ID)
+            query_result = self.QueryUser().filter(UsersTable.User_ID == User_ID)
             if query_result.count() ==1:
                 query_result.update({
                     "User_Name": User_Name,
@@ -39,7 +39,6 @@ class WeeklySqliteDB(WeeklyDB):
                     "User_Email": User_Email,
                     "User_Level": User_Level
                     })
-                import pdb;pdb.set_trace()
                 self.session.commit()
                 return True
         else:
@@ -114,12 +113,11 @@ class WeeklySqliteDB(WeeklyDB):
             result_list.append({
                 'Privilege_ID' : item.Privilege_ID,
                 'Privilege_Action' : item.Privilege_Action,
-                'Privilege_Handler' : item.Privilege_Handler
+                'Privilege_ControlAction' : item.Privilege_ControlAction
                 })
         return result_list
     def UpdateUserPrivilege(self,UserID,PrivilegeID):
         model = self.__Query__(PrivilegeToUserTable).filter(PrivilegeToUserTable.Privilege_UID == UserID)
-        import pdb;pdb.set_trace()
         if(model.count()==1):
             model.update({"Privilege_PID":PrivilegeID})
         else:
@@ -128,7 +126,64 @@ class WeeklySqliteDB(WeeklyDB):
         self.session.commit()
         return True
 
+###日志
+    def AddDaily(self, Daily_Content, Daily_Question, Daily_Time, User_ID):
+        tmpDaily = DailyTable(Daily_Content=Daily_Content, Daily_Question=Daily_Question,
+        Daily_Time=Daily_Time,Daily_Owner=User_ID)
+        self.__Insert__(tmpDaily)
+        return True
 
+    def UpdateDaily(self, DailyContent, DailyQuestion, DailyID):
+        DailyID = int(DailyID)
+        query_result = self.__Query__(DailyTable).filter(DailyTable.Daily_ID == DailyID)
+        if query_result.count() ==1:
+            query_result.update({
+                "Daily_Content": DailyContent,
+                "Daily_Question": DailyQuestion
+                })
+        self.session.commit()
+        return ""
+    def QueryAllDaily(self):
+        query_result = self.__Query__(DailyTable)
+        result_list=[]
+        for item in query_result:
+            result_list.append({
+                "Daily_Content": item.Daily_Content,
+                "Daily_Question": item.Daily_Question,
+                "Daily_Time": item.Daily_Time,
+                "Daily_Owner": item.User_ID
+                })
+        return result_list
+    def QueryDailyByUserAndDate(self,UserID,Start,End):
+        query_result = self.session.query(DailyTable,UsersTable).filter(UsersTable.User_ID==DailyTable.Daily_Owner)
+        if(UserID != 0):
+            query_result=query_result.filter(DailyTable.Daily_Owner == UserID)
+        if(Start != ""):
+            query_result=query_result.filter('date(Daily_Time) >= date("'+Start+'")')
+        if(End != ""):
+            query_result=query_result.filter('date(Daily_Time) <= date("'+End+'")')
+        result_list=[]
+        for item in query_result:
+            result_list.append({
+                "Daily_ID": item.DailyTable.Daily_ID,
+                "Daily_Content": item.DailyTable.Daily_Content,
+                "Daily_Question": item.DailyTable.Daily_Question,
+                "Daily_Time": item.DailyTable.Daily_Time,
+                "Daily_Owner": item.UsersTable.User_Name
+                })
+        return result_list
+    def QueryDailyByUser(self,UserID):
+        query_result = self.__Query__(DailyTable)
+        query_result.filter(DailyTable.Daily_Owner == UserID)
+        result_list=[]
+        for item in query_result:
+            result_list.append({
+               "Daily_Content": item.Daily_Content,
+                "Daily_Question": item.Daily_Question,
+                "Daily_Time": item.Daily_Time,
+                "Daily_Owner": item.User_ID
+                })
+        return result_list
 
     def InsertTask(self, task_owner, task_text,task_id=None):
         update_time = get_time_as_string()
@@ -189,7 +244,7 @@ class WeeklySqliteDB(WeeklyDB):
                 'Privilege_Name' : item.Privilege_Name,
                 'Privilege_Action' : item.Privilege_Action,
                 'Privilege_Parent' : item.Privilege_Parent,
-                'Privilege_Handler' : item.Privilege_Handler,
+                'Privilege_ControlAction' : item.Privilege_ControlAction,
                 })
         return result_list
 
