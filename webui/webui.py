@@ -206,17 +206,24 @@ class DailyHandler(BaseHandler):
     def get(self):
         def GetDaily():
             UserID = int(self.get_argument("UserID", None))
+            if int(self.GetUserLevel()) > 2:
+                UserID = self.get_current_user()
             Start = self.get_argument("Start","")
             End = self.get_argument("End","")
+            Page = int(self.get_argument("Page","1"))
+            Rows = 4
             DailyList = webui_config['WeeklyDb'].QueryDailyByUserAndDate(UserID,Start,End)
             if len(DailyList)>0:
-                result = "["
-                for i in DailyList:
+                result = '{"page":'+ str(Page)
+                result += ',"count":'+str(len(DailyList))
+                result += ',"rows":'+str(Rows)
+                result += ',"data":['
+                for i in DailyList[(Page-1)*Rows:(Page)*Rows]:
                     result += jsondumps(i, indent=4)+","
-                result = result[:-1] + "]"
+                result = result[:-1] + "]}"
                 self.write(result)
             else:
-                self.write("")
+                self.write('{"page":0,"count":0}')
         action = self.get_argument("action", None)
         todo = {
             "GetDaily":GetDaily
@@ -305,8 +312,7 @@ class ControlUnit(BaseHandler):
                 DailyQuestion=""
             self.render('ContentUnit/Daily/AddDaily.html', display_uint = 'AddDaily',date=date,DailyQuestion=DailyQuestion,DailyContent=DailyContent)
         def ViewDaily():
-            if self.GetUserLevel()>'3':
-                pdb.set_trace()
+            if int(self.GetUserLevel()) > 2:
                 user_list= webui_config['WeeklyDb'].QueryAllUserList()
             else:
                 user_list= webui_config['WeeklyDb'].QueryUserWithEQFilter(User_ID=self.get_current_user())

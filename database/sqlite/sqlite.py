@@ -155,7 +155,7 @@ class WeeklySqliteDB(WeeklyDB):
                 })
         return result_list
     def QueryDailyByUserAndDate(self,UserID,Start,End):
-        query_result = self.session.query(DailyTable,UsersTable).filter(UsersTable.User_ID==DailyTable.Daily_Owner)
+        query_result = self.session.query(DailyTable,UsersTable).filter(UsersTable.User_ID==DailyTable.Daily_Owner).order_by("date(Daily_Time) Desc")
         if(UserID != 0):
             query_result=query_result.filter(DailyTable.Daily_Owner == UserID)
         if(Start != ""):

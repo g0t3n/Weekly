@@ -20,21 +20,32 @@ $(function(){
   });
 })
 
-function getDailyList(){
+function getDailyList(page){
 $.ajax({
       type : "GET",
       url : "/DailyHandler?action=GetDaily&UserID="+$("#userID").val()+"&Start="+$("#timeStart").val()
-      +"&End="+$("#timeEnd").val()+"&Page="+$("#datetimepicker").val(),
+      +"&End="+$("#timeEnd").val()+"&Page="+page,
       success : function(data){
           if(data==""){$("#dailyUL").html("");return;}
           data=$.parseJSON(data);
-          dailyList="";
-          for(i in data){
+          dailyList="",pageList="";
+          if(data.count==0)
+          {
+            $("#dailyUL").html("");
+            $("#page").html("无数据");
+            return false;
+          }
+          for(j=1;j<(data.count/data.rows+data.count%data.rows);j++)
+          {
+            pageList+='<li><a onclick="getDailyList('+j+')" href="#">'+j+'</a></li>'
+          }
+          $("#page").html(pageList);
+          for(i in data.data){
               dailyList+="<hr><li>"
-              dailyList+="<p><span>日期:"+data[i].Daily_Time+"</span>";
-              dailyList+="<span style='margin-left:150px'>用户名:"+data[i].Daily_Owner+"</span></p>";
-              dailyList+="<p>内容:"+data[i].Daily_Content+"</p>";
-              dailyList+="<p>问题:"+data[i].Daily_Question+"</p></li>";
+              dailyList+="<p><span>日期:"+data.data[i].Daily_Time+"</span>";
+              dailyList+="<span style='margin-left:150px'>用户名:"+data.data[i].Daily_Owner+"</span></p>";
+              dailyList+="<p>内容:"+data.data[i].Daily_Content+"</p>";
+              dailyList+="<p>问题:"+data.data[i].Daily_Question+"</p></li>";
           }
           $("#dailyUL").html(dailyList);
       }
@@ -62,13 +73,14 @@ $.ajax({
     <option value="{{item['User_ID']}}">{{item['User_Name']}}</option>
         {% end %}
   </select>
-   <input type="button" class="btn btn-primary" value="Go" onclick="getDailyList()"/>
+   <input type="button" class="btn btn-primary" value="Go" onclick="getDailyList(1)"/>
 
         <div>
             <ul id="dailyUL">
             </ul>
         </div>
-
+  <ul class="pager" id="page">
+  </ul>
     </div>
 <div>
     </div>
