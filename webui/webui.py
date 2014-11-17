@@ -276,6 +276,19 @@ class PrivilegeHandler(BaseHandler):
             }
         todo.get(action)()
 
+### 个人信息
+class PersonalHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        if(self.CheckPrivilege("Personal")):
+            User_Name = self.get_argument("User_Name")
+            User_Pwd = self.get_argument("User_Pwd")
+            User_Email = self.get_argument("User_Email")
+            User_ID=int(self.get_current_user())
+            if webui_config['WeeklyDb'].SubmitPersonalInfo(User_Name, hashlib.sha512(User_Pwd).hexdigest().upper(), User_Email,User_ID):
+                self.write("<script>alert('success!'); self.location='/ViewContentUnit/?action=Personal'</script>")
+            else:
+                self.write("<script>alert('something wrong!'); self.location='/ViewContentUnit/?action=Personal'</script>")
 
 class ControlUnit(BaseHandler):
     @tornado.web.authenticated
@@ -313,10 +326,14 @@ class ControlUnit(BaseHandler):
             self.render('ContentUnit/Daily/AddDaily.html', display_uint = 'AddDaily',date=date,DailyQuestion=DailyQuestion,DailyContent=DailyContent)
         def ViewDaily():
             if int(self.GetUserLevel()) > 2:
-                user_list= webui_config['WeeklyDb'].QueryAllUserList()
-            else:
                 user_list= webui_config['WeeklyDb'].QueryUserWithEQFilter(User_ID=self.get_current_user())
+            else:
+                user_list= webui_config['WeeklyDb'].QueryAllUserList()
             self.render('ContentUnit/Daily/ViewDaily.html', display_uint = 'ViewDaily' , UserList=user_list)
+        def Personal():
+            UserID=int(self.get_current_user())
+            UserModel = webui_config['WeeklyDb'].QueryUserWithEQFilter(User_ID=UserID)
+            self.render('ContentUnit/PersonalInfo/EditInfo.html', display_uint = 'EditInfo',UserModel=UserModel[0])
         action = self.get_argument("action", None)
         todo = {
             "UserManage": UserManage,
@@ -325,6 +342,7 @@ class ControlUnit(BaseHandler):
             "AddUser": AddUser,
             "AddDaily":AddDaily,
             "ViewDaily":ViewDaily,
+            "Personal":Personal,
             }
         if not action:
             self.render('ContentUnit/default.html', display_unit = 'default')
@@ -348,6 +366,7 @@ application = tornado.web.Application([
     (r"/UserHandler/*", UserHandler),
     (r"/Login/*", LoginHandler),
     (r"/PrivilegeHandler/*", PrivilegeHandler),
+    (r"/PersonalHandler/*", PersonalHandler),
     (r"/DailyHandler/*", DailyHandler),
     (r".*", BaseHandler),
     ], **settings)

@@ -102,6 +102,7 @@ class WeeklySqliteDB(WeeklyDB):
             return 0
     def QueryUser(self, **kargs):
         return self.__Query__(UsersTable)
+    ###权限
     def QueryUserPrivilege(self,UserID):
         query_result = self.__Query__(PrivilegeToUserTable).filter(PrivilegeToUserTable.Privilege_UID == UserID)
         return query_result[0].Privilege_PID
@@ -125,8 +126,17 @@ class WeeklySqliteDB(WeeklyDB):
             self.__Insert__(tmp)
         self.session.commit()
         return True
-
-###日志
+    def SubmitPersonalInfo(self, User_Name, User_Pwd, User_Email,UserID):
+        query_result = self.QueryUser().filter(UsersTable.User_ID == UserID)
+        if query_result.count() ==1:
+            query_result.update({
+                "User_Name": User_Name,
+                "User_Pwd": User_Pwd,
+                "User_Email": User_Email
+                })
+            self.session.commit()
+            return True
+### 日志
     def AddDaily(self, Daily_Content, Daily_Question, Daily_Time, User_ID):
         tmpDaily = DailyTable(Daily_Content=Daily_Content, Daily_Question=Daily_Question,
         Daily_Time=Daily_Time,Daily_Owner=User_ID)
@@ -155,7 +165,7 @@ class WeeklySqliteDB(WeeklyDB):
                 })
         return result_list
     def QueryDailyByUserAndDate(self,UserID,Start,End):
-        query_result = self.session.query(DailyTable,UsersTable).filter(UsersTable.User_ID==DailyTable.Daily_Owner).order_by("date(Daily_Time) Desc")
+        query_result = self.session.query(DailyTable,UsersTable).filter(UsersTable.User_ID==DailyTable.Daily_Owner).order_by("date(Daily_Time) DESC")
         if(UserID != 0):
             query_result=query_result.filter(DailyTable.Daily_Owner == UserID)
         if(Start != ""):
@@ -184,7 +194,7 @@ class WeeklySqliteDB(WeeklyDB):
                 "Daily_Owner": item.User_ID
                 })
         return result_list
-
+### 任务
     def InsertTask(self, task_owner, task_text,task_id=None):
         update_time = get_time_as_string()
         # 如果 task_id 存在则更新 update_time 和 tasks_text 否者插入

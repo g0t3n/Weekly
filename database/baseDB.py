@@ -21,7 +21,7 @@ class UsersTable(BaseDb):
     User_Name = Column(String(450), unique=True, nullable=False)
     User_Pwd = Column(String(450), nullable=False)
     User_Lastlogin = Column(Integer)
-    User_Email = Column(String(450), unique=True)
+    User_Email = Column(String(450))
     User_Level = Column(String(450))
 
 class PrivilegeTable(BaseDb):

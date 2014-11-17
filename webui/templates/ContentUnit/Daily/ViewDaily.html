@@ -35,7 +35,8 @@ $.ajax({
             $("#page").html("无数据");
             return false;
           }
-          for(j=1;j<(data.count/data.rows+data.count%data.rows);j++)
+          countPage=Math.ceil(data.count/data.rows)
+          for(j=1;j<=countPage;j++)
           {
             pageList+='<li><a onclick="getDailyList('+j+')" href="#">'+j+'</a></li>'
           }
