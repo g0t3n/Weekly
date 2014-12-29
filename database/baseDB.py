@@ -54,6 +54,14 @@ class DailyTable(BaseDb):
     Daily_Question = Column(String, nullable=False)
     Daily_ID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
 
+class NoticeTable(BaseDb):
+    __tablename__ = 'Notice'
+    Notice_Owner = Column(Integer, nullable=False)
+    Notice_Time = Column(String, nullable=False)
+    Notice_ControlUser = Column(String, nullable=False)
+    Notice_Content = Column(String, nullable=False)
+    Notice_Title = Column(String, nullable=False)
+    Notice_ID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
 
 class WeeklyDB():
     def __init__(self,):

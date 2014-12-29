@@ -1,0 +1,111 @@
+{% extends "../../base.html" %}
+
+{{ title }}
+
+{% block head %}
+{% end %}
+
+{% block body %}
+<script type="text/javascript"  src="../static/js/jquery.ztree.all-3.5.min.js"></script>
+<link href="../static/css/zTreeStyle.css" rel="stylesheet">
+        	<SCRIPT type="text/javascript">
+		<!--
+		var setting = {
+		view: {
+				addHoverDom: function(){},
+				removeHoverDom: function(){},
+				selectedMulti: function(){}
+			},
+		callback: {
+		    beforeRemove: function(event, treeId, treeNode){
+		       if(!confirm("你确定？"))
+		       {
+		          return false;
+		       }
+		    }
+	        },
+		edit: {
+		    enable: true,
+		    editNameSelectAll: true,
+		    showRemoveBtn: function(){},
+			showRenameBtn: function(){}
+	        }
+			};
+
+		var zNodes =[
+			{ name:"父节点1 - 展开", open:true,
+				children: [
+					{ name:"父节点11 - 折叠",
+						children: [
+							{ name:"叶子节点111"},
+							{ name:"叶子节点112"},
+							{ name:"叶子节点113"},
+							{ name:"叶子节点114"}
+						]},
+					{ name:"父节点12 - 折叠",
+						children: [
+							{ name:"叶子节点121"},
+							{ name:"叶子节点122"},
+							{ name:"叶子节点123"},
+							{ name:"叶子节点124"}
+						]},
+					{ name:"父节点13 - 没有子节点", isParent:true}
+				]},
+			{ name:"父节点2 - 折叠",
+				children: [
+					{ name:"父节点21 - 展开", open:true,
+						children: [
+							{ name:"叶子节点211"},
+							{ name:"叶子节点212"},
+							{ name:"叶子节点213"},
+							{ name:"叶子节点214"}
+						]},
+					{ name:"父节点22 - 折叠",
+						children: [
+							{ name:"叶子节点221"},
+							{ name:"叶子节点222"},
+							{ name:"叶子节点223"},
+							{ name:"叶子节点224"}
+						]},
+					{ name:"父节点23 - 折叠",
+						children: [
+							{ name:"叶子节点231"},
+							{ name:"叶子节点232"},
+							{ name:"叶子节点233"},
+							{ name:"叶子节点234"}
+						]}
+				]},
+			{ name:"父节点3 - 没有子节点", isParent:true}
+
+		];
+
+		$(document).ready(function(){
+			$.fn.zTree.init($("#treeList"), setting, zNodes);
+		});
+		//-->
+	</SCRIPT>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+<ul id="treeList" class="ztree"></ul>
+          </div><!--/.well -->
+        </div><!--/span-->
+        <div class="span9">
+{% comment iframe 实现局部刷新 %}
+{% comment frameborder 控制无边框,onload 实现自适应高度 %}
+<iframe name="ViewContentUnit" id="ContentFrame" src="" width=100%
+  frameborder="0" onload="this.height=document.body.scrollHeight-177"></iframe>
+ {%  comment 
+          <div class="row-fluid">
+            <div class="span4">
+              <h2>Heading</h2>
+              <p>Donec id elit non . </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p>
+            </div><!--/span-->
+          </div><!--/row-->
+          %}
+        </div><!--/span-->
+      </div><!--/row-->
+    </div><!--/.fluid-container-->
+    {% end %}  

@@ -1,0 +1,66 @@
+{% extends ../base.html %}
+
+{% block body %}
+
+<script type="text/javascript">
+  function submitNotice(){
+    var userControl="";
+    usersList = $("[name='userControl']");
+    for(i in usersList)
+    {
+        if(usersList[i].checked==true)
+        {
+           userControl+=usersList[i].value+",";
+        }
+    }
+    userControl=userControl.substring(0,userControl.length-1)
+    var data = "NoticeContent=" + $('#noticeArea').val()+"&NoticeTitle="+$('#noticeTitle').val()+"&ControlUser="+userControl;
+    $.ajax({
+      type : "POST",
+      url : "/NoticeHandler?action=AddNotice",
+      data : data,
+      success : function(){
+                alert("Post Notice success");
+      },
+      error : function(wrongMsg){
+                alert(wrongMsg)
+      }
+    })
+  }
+</script>
+
+<script type="text/javascript" src="../static/kindeditor/kindeditor.js"></script>
+<script type="text/javascript" src="../static/kindeditor/plugins/code/prettify.js"></script>
+<link rel="stylesheet" href="../static/kindeditor/themes/default/default.css" />
+<link rel="stylesheet" href="../static/kindeditor/plugins/code/prettify.css" />
+	<script>
+        var editor1;
+		KindEditor.ready(function(K) {
+			    editor1 = K.create('#noticeArea', {
+				cssPath : '../static/kindeditor/plugins/code/prettify.css',
+				uploadJson : '/UploadHandler',
+				items : [
+						'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold', 'italic', 'underline',
+						'removeformat', 'quickformat','|', 'justifyleft', 'justifycenter', 'justifyright', 'insertorderedlist',
+						'insertunorderedlist', '|','hr', 'table','code', 'image', 'link']
+			});
+			prettyPrint();
+		});
+	</script>
+
+  <div>
+  <p>公告标题：<input type="text" id="noticeTitle" value="{%if NoticeModel!=None%}{{NoticeModel['NoticeTitle']}}{%end%}" style="width:450px"></p>
+  <hr>
+   <textarea id="noticeArea" class="form-control" rows="3" style="margin: 0px 0px 10px; width: 710px; height: 480px;">{%if NoticeModel!=None%}{{NoticeModel["NoticeContent"]}}{%end%}</textarea>
+      <div style="padding:10px">
+          谁能编辑：
+           {% for User in UserList %}
+          <input type="checkbox" name="userControl" checked="true" value="{{User['User_ID']}}">{{ User["User_Name"] }}
+          {% end %}
+      </div>
+       <div class="modal-fotter">
+    <button id="submitTaskButton" onclick="submitNotice()" class="btn btn-primary" data-loading-text="Loading...">保存更改</button>
+  </div>
+</div>
+
+{% end %}

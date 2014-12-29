@@ -7,11 +7,15 @@ import hashlib
 import string
 from urllib import unquote
 from json import dumps as jsondumps
+import time
 import datetime
 import tornado.ioloop
 import tornado.web
 import copy
-
+import tempfile
+import logging
+from PIL import Image
+from tornado.httpserver import HTTPServer
 from libs.libs import get_time_as_string
 
 __DEBUG__ = True
@@ -135,9 +139,6 @@ class LoginHandler(BaseHandler):
                  self.set_secure_cookie("UName", UserModel[0]["User_Name"],expires_days=1)
                  self.set_secure_cookie("UID", str(UserModel[0]["User_ID"]),expires_days=1)
                  self.redirect("/index")
-             else:
-                 self.write("<script>alert('Pwd Wrong!')</script>")
-                 self.render('ContentUnit/Login.html',display_uint='Login')
         else:
              self.write("<script>Everyone know that pwd&username can't be null</script>")
 
@@ -231,8 +232,8 @@ class DailyHandler(BaseHandler):
         todo.get(action)()
     @tornado.web.authenticated
     def post(self):
-        DailyContent = self.get_argument('DailyContent', None)
-        DailyQuestion = self.get_argument('DailyQuestion', None)
+        DailyContent = tornado.escape.xhtml_escape(self.get_argument('DailyContent', None))
+        DailyQuestion = tornado.escape.xhtml_escape(self.get_argument('DailyQuestion', None))
         now = datetime.datetime.now()
         DailyDate = now.strftime('%Y-%m-%d')
         uid = self.current_user
@@ -289,6 +290,110 @@ class PersonalHandler(BaseHandler):
                 self.write("<script>alert('success!'); self.location='/ViewContentUnit/?action=Personal'</script>")
             else:
                 self.write("<script>alert('something wrong!'); self.location='/ViewContentUnit/?action=Personal'</script>")
+class UploadHandler(BaseHandler):
+      @tornado.web.authenticated
+      def post(self):
+         def UploadImage():
+             if self.request.files["imgFile"]:
+                image_type_list = ['image/gif', 'image/jpeg','image/pjpeg', 'image/bmp', 'image/png', 'image/x-png']
+                Img = self.request.files['imgFile'][0]
+                if Img['content_type'] not in image_type_list:
+                    #类型错误
+                    self.write("{\"error\" : 1,\"message\" : \"图片类型错误\"}")
+                    return
+                if len(Img['body']) > 2 * 1024 * 1024:
+                    #太大了
+                    self.write("{\"error\" : 1,\"message\" : \"图片太大了\"}")
+                    return
+                tmp_file = tempfile.NamedTemporaryFile(delete=False)
+                tmp_file.write(Img['body'])
+                tmp_file.seek(0)
+                try:
+                    image_one = Image.open(tmp_file.name)
+                except IOError, error:
+                    logging.info(error)   # 进行日志记录。
+                    logging.info('+'*30 + '\n')
+                    logging.info(self.request.headers)
+                    tmp_file.close()
+                    os.remove(tmp_file.name)
+                    #图片不合法！
+                    self.write("{\"error\" : 1,\"message\" : \"图片不合法\"}")
+                    return
+
+                # 判断图片尺寸，不在尺寸内拒绝操作
+                if image_one.size[0] > 2000 or image_one.size[1] > 2000:
+                      tmp_file.close()
+                      os.remove(tmp_file.name)
+                      self.write('{\"error\" : 1,\"message\" : \"图片太大了\"}')
+                      return
+
+                # 进行存储。
+                # 指定存储目录，产生新的文件名。
+                image_path = self.get_template_path()+("/../static/upload/")
+                image_format = Img['filename'].split('.').pop().lower()
+                tmp_name = image_path + str(int(time.time()))+ "." + image_format
+                op_path= ("/../static/upload/") + str(int(time.time()))+ "." + image_format
+                image_one.save(tmp_name)
+
+                #关闭临时文件，关闭后临时文件自动删除
+                tmp_file.close()
+                os.remove(tmp_file.name)
+                self.write('{\"error\" : 0,\"url\" : \"'+ op_path +'\"}')
+         dir = self.get_argument("dir", None)
+         todo = {
+             "image":UploadImage
+             }
+         todo.get(dir)()
+class NoticeHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        NoticeContent = tornado.escape.xhtml_escape(self.get_argument('NoticeContent', None))
+        NoticeTitle = tornado.escape.xhtml_escape(self.get_argument('NoticeTitle', None))
+        NoticeID = int(self.get_argument('Notice',0))
+        ControlUser = self.get_argument('ControlUser', '')
+        now = datetime.datetime.now()
+        NoticeTime = now.strftime('%Y-%m-%d')
+        uid = self.current_user
+        if(NoticeID > 0):
+            if webui_config['WeeklyDb'].UpdateNotice(NoticeContent,NoticeTitle,NoticeID):
+                self.write("'success':'done'")
+            else:
+                self.write("'error' : 'some thing happend.. WTF'")
+        else:
+            if webui_config['WeeklyDb'].AddNotice(NoticeContent,NoticeTitle,NoticeTime,ControlUser,uid):
+                self.write("'success':'done'")
+            else:
+                self.write("'error' : 'some thing happend.. WTF'")
+class WorkTreeHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        UserName = self.get_secure_cookie("UName")
+        def GetTreeList():
+            self.write("")
+        action = self.get_argument("action", None)
+        todo = {
+            "GetTreeList": GetTreeList,
+            }
+        if not action:
+            self.render('ContentUnit/WorkTree/WorkTree.html', UserName = UserName)
+    def post(self):
+        NoticeContent = tornado.escape.xhtml_escape(self.get_argument('NoticeContent', None))
+        NoticeTitle = tornado.escape.xhtml_escape(self.get_argument('NoticeTitle', None))
+        NoticeID = int(self.get_argument('Notice',0))
+        ControlUser = self.get_argument('ControlUser', '')
+        now = datetime.datetime.now()
+        NoticeTime = now.strftime('%Y-%m-%d')
+        uid = self.current_user
+        if(NoticeID > 0):
+            if webui_config['WeeklyDb'].UpdateNotice(NoticeContent,NoticeTitle,NoticeID):
+                self.write("'success':'done'")
+            else:
+                self.write("'error' : 'some thing happend.. WTF'")
+        else:
+            if webui_config['WeeklyDb'].AddNotice(NoticeContent,NoticeTitle,NoticeTime,ControlUser,uid):
+                self.write("'success':'done'")
+            else:
+                self.write("'error' : 'some thing happend.. WTF'")
 
 class ControlUnit(BaseHandler):
     @tornado.web.authenticated
@@ -304,7 +409,7 @@ class ControlUnit(BaseHandler):
             for i in display_content:
                 result += jsondumps(i, indent=4) +"\n"
             self.render('ContentUnit/ViewTask.html', display_uint = 'ViewTask',
-                   TaskContent=result )
+                   TaskContent=result)
         def AddTask():
             self.render('ContentUnit/AddTask.html', display_uint = 'AddTask',
                     taskContent="default")
@@ -318,8 +423,8 @@ class ControlUnit(BaseHandler):
             date = now.strftime('%Y-%m-%d')
             TodayDaily=webui_config['WeeklyDb'].QueryDailyByUserAndDate(self.current_user,date,date)
             if(len(TodayDaily)>0):
-                DailyContent=TodayDaily[0]["Daily_Content"]
-                DailyQuestion=TodayDaily[0]["Daily_Question"]
+                DailyContent=tornado.escape.xhtml_unescape(TodayDaily[0]["Daily_Content"])
+                DailyQuestion=tornado.escape.xhtml_unescape(TodayDaily[0]["Daily_Question"])
             else:
                 DailyContent=""
                 DailyQuestion=""
@@ -334,6 +439,16 @@ class ControlUnit(BaseHandler):
             UserID=int(self.get_current_user())
             UserModel = webui_config['WeeklyDb'].QueryUserWithEQFilter(User_ID=UserID)
             self.render('ContentUnit/PersonalInfo/EditInfo.html', display_uint = 'EditInfo',UserModel=UserModel[0])
+        def AddNotice():
+            UserList= webui_config['WeeklyDb'].QueryAllUserList()
+            NoticeID = int(self.get_argument("NoticeID",0))
+            if(NoticeID!=0):
+                NoticeModel = webui_config['WeeklyDb'].QueryDailyByUserAndDate(self.current_user)
+            else:
+                NoticeModel = None
+            self.render('ContentUnit/Notice/AddNotice.html',NoticeModel=NoticeModel,UserList=UserList)
+        def ViewNotice():
+            self.render('ContentUnit/Notice/ViewNotice.html')
         action = self.get_argument("action", None)
         todo = {
             "UserManage": UserManage,
@@ -343,6 +458,8 @@ class ControlUnit(BaseHandler):
             "AddDaily":AddDaily,
             "ViewDaily":ViewDaily,
             "Personal":Personal,
+            "AddNotice":AddNotice,
+            "ViewNotice":ViewNotice,
             }
         if not action:
             self.render('ContentUnit/default.html', display_unit = 'default')
@@ -361,6 +478,7 @@ application = tornado.web.Application([
     (r"/", MainHandler),
     # (r"/login", LoginHandler),
     (r"/index*", MainHandler),
+    (r"/WorkTree*", WorkTreeHandler),
     (r"/AddTask/*", AddTask),
     (r"/ViewContentUnit/*", ControlUnit),
     (r"/UserHandler/*", UserHandler),
@@ -368,14 +486,26 @@ application = tornado.web.Application([
     (r"/PrivilegeHandler/*", PrivilegeHandler),
     (r"/PersonalHandler/*", PersonalHandler),
     (r"/DailyHandler/*", DailyHandler),
+    (r"/NoticeHandler/*", NoticeHandler),
+    (r"/UploadHandler/*", UploadHandler),
     (r".*", BaseHandler),
     ], **settings)
 
 def main(**kargs):
     webui_config.update(kargs)
-    application.listen(8888)
+    server = HTTPServer(application,ssl_options={
+       "certfile": os.path.join(os.path.abspath("."), "server.crt"),
+       "keyfile": os.path.join(os.path.abspath("."), "server.key"),
+    })
+    server.listen(8888)
     tornado.ioloop.IOLoop.instance().start()
+#    application.listen(8888)
+#   tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == "__main__":
-    application.listen(8888)
+    server = HTTPServer(application,ssl_options={
+       "certfile": os.path.join(os.path.abspath("."), "server.crt"),
+       "keyfile": os.path.join(os.path.abspath("."), "server.key"),
+    })
+    server.listen(8888)
     tornado.ioloop.IOLoop.instance().start()

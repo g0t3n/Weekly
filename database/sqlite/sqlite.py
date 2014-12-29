@@ -10,7 +10,7 @@ from sqlalchemy.orm import relationship
 
 from sqlalchemy.orm import sessionmaker
 
-from database.baseDB import UsersTable,TasksTable,WeeklyDB,PrivilegeTable,PrivilegeToUserTable,DailyTable
+from database.baseDB import UsersTable,TasksTable,WeeklyDB,PrivilegeTable,PrivilegeToUserTable,DailyTable,NoticeTable
 import database.baseDB as basedb
 from libs.libs import get_time_as_string
 __DEBUG__ = True
@@ -142,7 +142,6 @@ class WeeklySqliteDB(WeeklyDB):
         Daily_Time=Daily_Time,Daily_Owner=User_ID)
         self.__Insert__(tmpDaily)
         return True
-
     def UpdateDaily(self, DailyContent, DailyQuestion, DailyID):
         DailyID = int(DailyID)
         query_result = self.__Query__(DailyTable).filter(DailyTable.Daily_ID == DailyID)
@@ -194,6 +193,54 @@ class WeeklySqliteDB(WeeklyDB):
                 "Daily_Owner": item.User_ID
                 })
         return result_list
+
+### 公告
+    def AddNotice(self, Notice_Content, Notice_Title, Notice_Time, Notice_ControlUser, User_ID):
+        tmpNotice = NoticeTable(Notice_Content=Notice_Content, Notice_Title=Notice_Title,
+        Notice_Time=Notice_Time,Notice_ControlUser=Notice_ControlUser,Notice_Owner=User_ID)
+        self.__Insert__(tmpNotice)
+        return True
+    def UpdateNotice(self, NoticeContent, NoticeTitle, NoticeID):
+        NoticeID = int(NoticeID)
+        query_result = self.__Query__(NoticeTable).filter(NoticeTable.Notice_ID == NoticeID)
+        if query_result.count() ==1:
+            query_result.update({
+                "Notice_Content": NoticeContent,
+                "Notice_Title": NoticeTitle
+                })
+        self.session.commit()
+        return ""
+    def QueryAllNotice(self):
+        query_result = self.__Query__(NoticeTable)
+        result_list=[]
+        for item in query_result:
+            result_list.append({
+                "Notice_Content": item.Notice_Content,
+                "Notice_Title": item.Notice_Title,
+                "Notice_Time": item.Notice_Time,
+                "Notice_Owner": item.User_ID
+                })
+        return result_list
+    def QueryNoticeByUser(self,UserID,Start,End):
+        query_result = self.session.query(DailyTable,UsersTable).filter(UsersTable.User_ID==DailyTable.Daily_Owner).order_by("date(Daily_Time) DESC")
+        if(UserID != 0):
+            query_result=query_result.filter(DailyTable.Daily_Owner == UserID)
+        if(Start != ""):
+            query_result=query_result.filter('date(Daily_Time) >= date("'+Start+'")')
+        if(End != ""):
+            query_result=query_result.filter('date(Daily_Time) <= date("'+End+'")')
+        result_list=[]
+        for item in query_result:
+            result_list.append({
+                "Daily_ID": item.DailyTable.Daily_ID,
+                "Daily_Content": item.DailyTable.Daily_Content,
+                "Daily_Question": item.DailyTable.Daily_Question,
+                "Daily_Time": item.DailyTable.Daily_Time,
+                "Daily_Owner": item.UsersTable.User_Name
+                })
+        return result_list
+
+
 ### 任务
     def InsertTask(self, task_owner, task_text,task_id=None):
         update_time = get_time_as_string()

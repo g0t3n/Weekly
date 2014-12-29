@@ -1,22 +1,32 @@
 {% extends ../base.html %}
 
 {% block body %}
-<script type="text/javascript"  src="../static/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript"  src="../static/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript"  src="../static/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+<link rel="stylesheet" href="../static/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" />
 <script type="text/javascript">
 $(function(){
+var myDate = new Date();
+myDate.toLocaleDateString();
   $('#datetimepicker').datetimepicker({
-    format: 'yyyy-MM-dd',
-    language: 'en',
+    format: 'yyyy-mm-dd',
+    language: 'zh-CN',
     pickDate: true,
     pickTime: false,
-    inputMask: true
+    inputMask: true,
+    todayBtn: 'linked',
+    autoclose: true,
+    todayHighlight: true,
+    minView: 2
   });
   $('#datetimepicker2').datetimepicker({
-    format: 'yyyy-MM-dd',
-    language: 'en',
+    format: 'yyyy-mm-dd',
+    language: 'zh-CN',
     pickDate: true,
+    todayBtn: 'linked',
     pickTime: false,
-    inputMask: true
+    inputMask: true,
+    minView: 2
   });
 })
 
@@ -45,29 +55,30 @@ $.ajax({
               dailyList+="<hr><li>"
               dailyList+="<p><span>日期:"+data.data[i].Daily_Time+"</span>";
               dailyList+="<span style='margin-left:150px'>用户名:"+data.data[i].Daily_Owner+"</span></p>";
-              dailyList+="<p>内容:"+data.data[i].Daily_Content+"</p>";
+              dailyList+="<p>内容:"+$("<div>").html(data.data[i].Daily_Content.replace("\n","<br/>")).text()+"</p>";
               dailyList+="<p>问题:"+data.data[i].Daily_Question+"</p></li>";
           }
           $("#dailyUL").html(dailyList);
       }
     })
 }
+function removeDate(btn){
+  $(btn).siblings("input").val('')
+}
 </script>
 <div class="hero-unit">
   从:
-  <div id="datetimepicker" class="input-append date">
-  <input type="text" id="timeStart" />
-  <span class="add-on">
-    <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
-  </span>
-  </div>
+  <div class="controls input-append date" id="datetimepicker" data-date="" data-link-field="dtp_input2">
+                    <input size="16" id="timeStart" type="text" value="" readonly>
+                    <span class="add-on" onclick="removeDate(this)"><i class="icon-remove"></i></span>
+					<span class="add-on"><i class="icon-th"></i></span>
+                </div>
     到:
-<div id="datetimepicker2" class="input-append date">
-  <input type="text" id="timeEnd" />
-  <span class="add-on">
-    <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
-  </span>
-</div>
+<div class="controls input-append date" id="datetimepicker2" data-date="" data-link-field="dtp_input2">
+                    <input size="16" id="timeEnd"  type="text" value="" readonly>
+                    <span class="add-on" onclick="removeDate(this)"><i class="icon-remove"></i></span>
+					<span class="add-on"><i class="icon-th"></i></span>
+                </div>
   用户名：<select id="userID">
         <option value="0">所有人</option>
         {% for item in UserList %}

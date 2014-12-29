@@ -4,7 +4,8 @@
 
 <script type="text/javascript">
   function submitTask(){
-    var data = "DailyContent=" + $('#dailyArea').val()+"&DailyQuestion="+$('#questionArea').val();
+    editor1.sync();
+    var data = "DailyContent=" + encodeURIComponent(editor1.html())+"&DailyQuestion="+$('#questionArea').val();
     $.ajax({
       type : "POST",
       url : "/DailyHandler?action=AddDaily",
@@ -18,7 +19,24 @@
     })
   }
 </script>
-
+<script type="text/javascript" src="../static/kindeditor/kindeditor.js"></script>
+<script type="text/javascript" src="../static/kindeditor/plugins/code/prettify.js"></script>
+<link rel="stylesheet" href="../static/kindeditor/themes/default/default.css" />
+<link rel="stylesheet" href="../static/kindeditor/plugins/code/prettify.css" />
+	<script>
+        var editor1;
+		KindEditor.ready(function(K) {
+			    editor1 = K.create('#dailyArea', {
+				cssPath : '../static/kindeditor/plugins/code/prettify.css',
+				uploadJson : '/UploadHandler',
+				items : [
+						'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold', 'italic', 'underline',
+						'removeformat', 'quickformat','|', 'justifyleft', 'justifycenter', 'justifyright', 'insertorderedlist',
+						'insertunorderedlist', '|','hr', 'table','code', 'image', 'link']
+			});
+			prettyPrint();
+		});
+	</script>
 
 <div class="hero-unit">
   <div>
@@ -33,4 +51,5 @@
     <button id="submitTaskButton" onclick="submitTask()" class="btn btn-primary" data-loading-text="Loading...">保存更改</button>
   </div>
 </div>
+
 {% end %}
